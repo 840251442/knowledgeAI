@@ -51,6 +51,8 @@ export const personalArticleSelectors = {
   row: "personal-article-row",
   submitReview: "personal-article-submit-review",
   status: "personal-article-status",
+  logout: "personal-logout",
+  switchAccount: "personal-switch-account",
 } as const;
 
 export const reviewQueueSelectors = {
