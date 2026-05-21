@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import PersonalLogoutButton from "@/components/auth/PersonalLogoutButton";
 import { requireRole } from "@/lib/auth/require-role";
 import { listPersonalArticles } from "@/services/article.service";
 
@@ -33,6 +34,7 @@ export default async function PersonalArticlesPage() {
         <div className="meMetaRow">
           {user.email ? <span className="statusPill">邮箱：{user.email}</span> : null}
           {user.phone ? <span className="statusPill">手机号：{user.phone}</span> : null}
+          <PersonalLogoutButton />
           <Link className="chipLink" href="/auth">
             切换账号
           </Link>
