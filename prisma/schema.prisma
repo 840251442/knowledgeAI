@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PERSONAL
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum ReviewType {
+  AI
+  HUMAN
+}
+
+enum ReviewDecision {
+  APPROVED
+  REJECTED
+  MANUAL_REQUIRED
+}
+
+enum OtpPurpose {
+  LOGIN
+  REGISTER
+}
+
+enum EmbeddingStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+enum EmbeddingTaskStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum SearchQueryType {
+  KEYWORD
+  SEMANTIC
+  HYBRID
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  username     String    @unique @db.VarChar(50)
+  email        String    @unique @db.VarChar(100)
+  passwordHash String    @db.VarChar(255)
+  role         UserRole  @default(ADMIN)
+  isActive     Boolean   @default(true)
+  articles     Article[] @relation("AdminArticleAuthor")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model PersonalUser {
+  id           String    @id @default(cuid())
+  email        String?   @unique @db.VarChar(100)
+  phone        String?   @unique @db.VarChar(30)
+  passwordHash String?   @db.VarChar(255)
+  role         UserRole  @default(PERSONAL)
+  isActive     Boolean   @default(true)
+  articles     Article[] @relation("PersonalArticleAuthor")
+  reviews      ArticleReview[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique @db.VarChar(100)
+  slug        String    @unique @db.VarChar(120)
+  description String?   @db.VarChar(255)
+  sortOrder   Int       @default(0)
+  isVisible   Boolean   @default(true)
+  articles    Article[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String       @unique @db.VarChar(60)
+  slug      String       @unique @db.VarChar(80)
+  articles  ArticleTag[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Article {
+  id              String        @id @default(cuid())
+  title           String        @db.VarChar(200)
+  slug            String        @unique @db.VarChar(220)
+  summary         String?       @db.VarChar(500)
+  contentMarkdown String        @db.LongText
+  coverImage      String?       @db.VarChar(500)
+  status          ArticleStatus @default(DRAFT)
+  isFeatured      Boolean       @default(false)
+  publishedAt     DateTime?
+  categoryId      String
+  adminAuthorId   String?
+  personalAuthorId String?
+  category        Category      @relation(fields: [categoryId], references: [id])
+  adminAuthor     AdminUser?    @relation("AdminArticleAuthor", fields: [adminAuthorId], references: [id])
+  personalAuthor  PersonalUser? @relation("PersonalArticleAuthor", fields: [personalAuthorId], references: [id])
+  tags            ArticleTag[]
+  chunks          ArticleChunk[]
+  embeddingTasks  EmbeddingTask[]
+  reviews         ArticleReview[]
+  topSearchLogs   SearchLog[]      @relation("SearchLogTopArticle")
+  views           ArticleView[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([categoryId])
+  @@index([adminAuthorId])
+  @@index([personalAuthorId])
+  @@index([status, publishedAt])
+  @@index([status, updatedAt])
+}
+
+model ArticleReview {
+  id               String         @id @default(cuid())
+  articleId        String
+  reviewType       ReviewType
+  decision         ReviewDecision
+  reason           String?        @db.Text
+  riskTags         Json?
+  reviewedByUserId String?
+  modelName        String?        @db.VarChar(100)
+  createdAt        DateTime       @default(now())
+  article          Article        @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  reviewedBy       PersonalUser?  @relation(fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([articleId, createdAt])
+  @@index([decision, createdAt])
+}
+
+model PhoneOtpCode {
+  id           String     @id @default(cuid())
+  phone        String     @db.VarChar(30)
+  codeHash     String     @db.VarChar(255)
+  purpose      OtpPurpose
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  attemptCount Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@index([phone, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+model ArticleTag {
+  id        String   @id @default(cuid())
+  articleId String
+  tagId     String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([articleId, tagId])
+  @@index([tagId])
+}
+
+model ArticleChunk {
+  id                 String          @id @default(cuid())
+  articleId          String
+  chunkIndex         Int
+  headingPath        String?         @db.VarChar(255)
+  content            String          @db.Text
+  contentHash        String          @db.VarChar(64)
+  tokenCount         Int             @default(0)
+  embeddingStatus    EmbeddingStatus @default(PENDING)
+  embeddingModel     String?         @db.VarChar(100)
+  embeddingVectorRef String?         @db.VarChar(255)
+  article            Article         @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([articleId, chunkIndex])
+  @@index([articleId, embeddingStatus])
+}
+
+model EmbeddingTask {
+  id           String              @id @default(cuid())
+  articleId    String
+  taskType     String              @db.VarChar(50)
+  status       EmbeddingTaskStatus @default(PENDING)
+  errorMessage String?             @db.VarChar(500)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  article      Article             @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+
+  @@index([articleId, status])
+  @@index([createdAt])
+}
+
+model SearchLog {
+  id          String          @id @default(cuid())
+  query       String          @db.VarChar(255)
+  queryType   SearchQueryType @default(HYBRID)
+  resultCount Int             @default(0)
+  latencyMs   Int             @default(0)
+  topArticleId String?
+  topArticle  Article?        @relation("SearchLogTopArticle", fields: [topArticleId], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+
+  @@index([createdAt])
+  @@index([query])
+  @@index([topArticleId])
+}
+
+model ArticleView {
+  id           String   @id @default(cuid())
+  articleId    String
+  viewerIpHash String?  @db.VarChar(128)
+  userAgent    String?  @db.VarChar(255)
+  referer      String?  @db.VarChar(255)
+  article      Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@index([articleId, createdAt])
+  @@index([createdAt])
+}

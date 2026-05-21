@@ -1,0 +1,47 @@
+{
+  "name": "knowledgeai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI 在线知识库（公开站 + 管理后台 + 混合搜索）",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "embeddings:backfill": "tsx scripts/backfill-embeddings.ts",
+    "reindex:all": "tsx scripts/reindex-all.ts",
+    "ai:draft:probe": "tsx scripts/probe-ai-draft-stream.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/openai": "^0.5.16",
+    "@qdrant/js-client-rest": "^1.15.1",
+    "@prisma/client": "^6.19.3",
+    "next": "^16.2.6",
+    "openai": "^6.8.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-markdown": "^10.1.0",
+    "redis": "^5.12.1",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
+    "prisma": "^6.19.3",
+    "tsx": "^4.22.2",
+    "typescript": "^6.0.3"
+  }
+}
