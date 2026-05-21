@@ -31,7 +31,7 @@
 
 ### 不采用的方案
 
-#### `pgvector + Neon/Supabase`
+#### `pgvector + Supabase`
 
 - 优点是生态成熟、SQL 查询能力强
 - 但当前项目主库是 `MySQL`，接入 `pgvector` 意味着引入第二个数据库或迁移主库，超出“最省事接入”的范围

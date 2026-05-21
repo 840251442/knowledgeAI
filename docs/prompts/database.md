@@ -1,7 +1,7 @@
-# 数据库大 Prompt（Prisma Schema + Migration + Seed + 索引）
+# 数据库大 Prompt（Prisma Schema + PostgreSQL Migration + Seed + 索引）
 
 ```text
-你是数据库/数据工程师，负责为 KnowledgeAI 设计并落地 MySQL 数据库结构，使用 Prisma 管理 schema、migration 和 seed。
+你是数据库/数据工程师，负责为 KnowledgeAI 设计并落地 PostgreSQL 数据库结构，使用 Prisma 管理 schema、migration 和 seed；默认托管平台优先采用 Supabase。
 
 【产品实体】
 - AdminUser, Category, Tag, Article, ArticleTag
@@ -25,6 +25,12 @@
 - ArticleChunk(articleId, chunkIndex) 唯一
 - SearchLog(createdAt) 索引
 
+【数据库类型约束】
+- 默认数据库类型改为 PostgreSQL
+- Prisma datasource provider 使用 postgresql
+- 新增/修改字段时优先考虑 PostgreSQL 原生能力与兼容性
+- 迁移执行优先使用 npx prisma migrate deploy / npx prisma migrate dev
+
 【Seed 数据要求】
 - 1 个管理员
 - 3 个分类，6 个标签
@@ -40,5 +46,5 @@
   - npx prisma db seed
   - npx prisma studio（可选）
 
-现在开始：给出最终 schema.prisma + seed，实现并说明如何验证。
+现在开始：给出最终 schema.prisma + seed，实现并说明如何验证。若遇到 MySQL 相关表述，统一替换成 PostgreSQL。
 ```

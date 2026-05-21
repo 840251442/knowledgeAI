@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -107,7 +107,7 @@ model Article {
   title           String        @db.VarChar(200)
   slug            String        @unique @db.VarChar(220)
   summary         String?       @db.VarChar(500)
-  contentMarkdown String        @db.LongText
+  contentMarkdown String        @db.Text
   coverImage      String?       @db.VarChar(500)
   status          ArticleStatus @default(DRAFT)
   isFeatured      Boolean       @default(false)

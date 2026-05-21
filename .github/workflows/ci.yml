@@ -1,31 +1,35 @@
-name: e2e
+name: ci
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
-  playwright:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_DATABASE: knowledgeai
-          MYSQL_USER: knowledgeai
-          MYSQL_PASSWORD: knowledgeai_dev
-          MYSQL_ROOT_PASSWORD: knowledgeai_root
+          POSTGRES_DB: knowledgeai
+          POSTGRES_USER: knowledgeai
+          POSTGRES_PASSWORD: knowledgeai_dev
         ports:
-          - 3307:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pknowledgeai_root"
+          --health-cmd="pg_isready -U knowledgeai -d knowledgeai"
           --health-interval=5s
           --health-timeout=3s
           --health-retries=30
     env:
-      DATABASE_URL: mysql://knowledgeai:knowledgeai_dev@127.0.0.1:3307/knowledgeai
+      CI: true
+      NODE_ENV: test
+      DATABASE_URL: postgresql://knowledgeai:knowledgeai_dev@127.0.0.1:5432/knowledgeai?schema=public
       AUTH_SECRET: knowledgeai-e2e-secret
+      E2E_FAST_REVIEW: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,14 +43,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Prisma validate
+        run: npx prisma validate
+
+      - name: Prisma generate
+        run: npm run db:generate
 
       - name: Run lint
         run: npm run lint
 
       - name: Run typecheck
         run: npm run typecheck
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Run e2e tests
         run: npm run test:e2e -- --project=chromium

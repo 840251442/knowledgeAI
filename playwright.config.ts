@@ -17,7 +17,7 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   webServer: {
-    command: `E2E_FAST_REVIEW=1 npm run dev -- --hostname ${webHost} --port ${webPort}`,
+    command: `NODE_ENV=test E2E_FAST_REVIEW=1 npm run dev -- --hostname ${webHost} --port ${webPort}`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 120_000,

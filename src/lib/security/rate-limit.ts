@@ -44,7 +44,7 @@ async function checkMemoryBucket(key: string, options: RateLimitOptions): Promis
 }
 
 export async function checkRateLimit(key: string, options: RateLimitOptions): Promise<RateLimitResult> {
-  if (process.env.NODE_ENV === "test") {
+  if (process.env.NODE_ENV === "test" || process.env.E2E_FAST_REVIEW === "1") {
     return {
       allowed: true,
       remaining: options.limit,

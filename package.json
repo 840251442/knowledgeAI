@@ -5,13 +5,19 @@
   "description": "AI 在线知识库（公开站 + 管理后台 + 混合搜索）",
   "scripts": {
     "dev": "next dev",
+    "dev:local": "bash scripts/run-with-db.sh local npm run dev -- --hostname 127.0.0.1 --port 3000",
+    "dev:online": "bash scripts/run-with-db.sh online npm run dev -- --hostname 127.0.0.1 --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:local": "bash scripts/run-with-db.sh local npx prisma migrate dev",
+    "db:migrate:online": "bash scripts/run-with-db.sh online npx prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:local": "bash scripts/run-with-db.sh local npm run db:seed",
+    "db:seed:online": "bash scripts/run-with-db.sh online npm run db:seed",
     "embeddings:backfill": "tsx scripts/backfill-embeddings.ts",
     "reindex:all": "tsx scripts/reindex-all.ts",
     "ai:draft:probe": "tsx scripts/probe-ai-draft-stream.ts",
@@ -32,6 +38,9 @@
     "react-markdown": "^10.1.0",
     "redis": "^5.12.1",
     "remark-gfm": "^4.0.1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

@@ -4,6 +4,23 @@ import { ChatOpenAI } from "@langchain/openai";
 import { requireAiConfig } from "@/config/ai";
 
 export async function* streamArticleDraft(input: { keyword: string }) {
+  if (process.env.E2E_FAST_REVIEW === "1" || process.env.NODE_ENV === "test") {
+    const draft = [
+      `# ${input.keyword} 实践指南`,
+      "",
+      "## 背景",
+      `围绕 ${input.keyword} 展开一套可落地的技术方案。`,
+      "",
+      "## 方案",
+      "- 分析问题边界",
+      "- 给出实施步骤",
+      "- 补充验证方式",
+    ].join("\n");
+
+    yield draft;
+    return;
+  }
+
   const config = requireAiConfig();
 
   const model = new ChatOpenAI({
