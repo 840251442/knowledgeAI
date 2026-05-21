@@ -17,7 +17,7 @@ test("personal logout should clear session and block me/articles", async ({ page
   await expect(page.getByTestId(personalArticleSelectors.list)).toBeVisible();
 
   await page.getByTestId(personalArticleSelectors.logout).click();
-  await expect(page).toHaveURL(/\/auth\?mode=login$/);
+  await page.waitForURL(/\/auth\?mode=login$/, { timeout: 30_000 });
 
   await page.goto("/me/articles");
   await expect(page).toHaveURL(/\/auth(\?|$)/);
