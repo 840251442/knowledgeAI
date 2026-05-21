@@ -249,3 +249,162 @@
   .grid2, .twoCol{ grid-template-columns: 1fr; }
 }
 
+.authShell{
+  padding: 16px;
+}
+
+.authCard{
+  max-width: 720px;
+  margin: 0 auto;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  border-radius: 20px;
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.authHeader{
+  display: grid;
+  gap: 8px;
+}
+
+.authHeader h1{
+  margin: 0;
+  font-size: 22px;
+}
+
+.authHeader p{
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.authTabs{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.authForm{
+  display: grid;
+  gap: 12px;
+}
+
+.authActions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.authHint{
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.authMessage,
+.authError,
+.authSuccess{
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.authMessage{
+  border: 1px solid rgba(6,182,212,.25);
+  background: rgba(6,182,212,.10);
+  color: rgba(255,255,255,.86);
+}
+
+.authError{
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.12);
+  color: rgba(255,255,255,.9);
+}
+
+.authSuccess{
+  border: 1px solid rgba(34,197,94,.35);
+  background: rgba(34,197,94,.12);
+  color: rgba(255,255,255,.9);
+}
+
+.authSplit{
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 16px;
+}
+
+.authAside{
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.12);
+  border-radius: 18px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.authAside strong{
+  font-size: 14px;
+}
+
+.authAside p{
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.meMetaRow{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.statusPill{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+}
+
+.statusPillDraft{
+  border-color: rgba(245,158,11,.30);
+  background: rgba(245,158,11,.12);
+}
+
+.statusPillPending{
+  border-color: rgba(6,182,212,.30);
+  background: rgba(6,182,212,.12);
+}
+
+.statusPillPublished{
+  border-color: rgba(34,197,94,.30);
+  background: rgba(34,197,94,.12);
+}
+
+.statusPillRejected{
+  border-color: rgba(239,68,68,.30);
+  background: rgba(239,68,68,.12);
+}
+
+.meEmpty{
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255,255,255,.14);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 900px){
+  .authSplit{ grid-template-columns: 1fr; }
+}
+

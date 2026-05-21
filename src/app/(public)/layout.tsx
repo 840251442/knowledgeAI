@@ -20,7 +20,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link className="chipLink" href="/articles">
             文章
           </Link>
-          <Link className="chipLink chipLinkPrimary" href="/admin/login">
+          <Link className="chipLink" href="/auth?mode=login">
+            登录
+          </Link>
+          <Link className="chipLink chipLinkPrimary" href="/auth?mode=register">
+            注册
+          </Link>
+          <Link className="chipLink" href="/admin/login">
             后台
           </Link>
         </nav>

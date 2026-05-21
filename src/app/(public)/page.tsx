@@ -34,7 +34,7 @@ export default function PublicHomePage() {
 
         <div className="card">
           <h3>入口</h3>
-          <p>公开浏览与后台管理入口。</p>
+          <p>公开浏览、个人登录注册与后台管理入口。</p>
           <div className="list">
             <div className="result">
               <div>
@@ -43,6 +43,24 @@ export default function PublicHomePage() {
               </div>
               <Link className="score" href="/articles">
                 GO
+              </Link>
+            </div>
+            <div className="result">
+              <div>
+                <strong>个人注册</strong>
+                <div className="resultMeta">创建个人账号后，可查看自己的文章和审核状态</div>
+              </div>
+              <Link className="score" href="/auth?mode=register">
+                JOIN
+              </Link>
+            </div>
+            <div className="result">
+              <div>
+                <strong>个人登录</strong>
+                <div className="resultMeta">已有账号可直接进入个人文章页</div>
+              </div>
+              <Link className="score" href="/auth?mode=login">
+                LOGIN
               </Link>
             </div>
             <div className="result">
