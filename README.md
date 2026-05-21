@@ -1,6 +1,33 @@
 # knowledgeAI
 
+## 环境要求
+
+- Node.js 22 及以上版本（建议使用 nvm 管理多版本）
+
 AI 在线知识库（公开站 + 管理后台 + 混合搜索）。
+
+## 项目启动配置类
+
+项目启动时的核心配置都集中在 `src/config`：
+
+- `src/config/ai.ts`
+  - 负责 AI 与向量检索相关配置读取与校验
+  - 包括 `QDRANT_*`、`EMBEDDING_*`、`AI_WRITER_*`、`AI_REVIEW_MODEL` 等
+  - 提供 `aiConfig`、`isRealSemanticSearchEnabled()`、`requireAiConfig()`
+- `src/config/search.ts`
+  - 负责搜索权重和阈值配置
+  - 包括关键词/语义/新鲜度权重、语义召回阈值等
+- `src/config/site.ts`
+  - 负责站点基础元信息（站点名、描述）
+
+建议：新增配置时优先放入 `src/config`，避免在业务代码中直接散落读取 `process.env`。
+
+## 变更记录拆分
+
+- 升级相关内容（数据库迁移、CI/CD 升级等）统一记录在：
+  - `docs/superpowers/plans/2026-05-21-supabase-postgres-cicd.md`
+- 升级内容之外的常规改动统一记录在：
+  - `docs/records/non-upgrade-changelog.md`
 
 ## Workspace Skills
 
@@ -15,7 +42,7 @@ AI 在线知识库（公开站 + 管理后台 + 混合搜索）。
 
 - Node: `22`，仓库根目录已有 `.nvmrc`
 - 包管理器: `npm`
-- 数据库: MySQL 8.0+ 或仓库自带的本地 MySQL helper
+- 数据库: PostgreSQL（推荐 Supabase 托管）或你自己的 PostgreSQL 实例
 - 缓存: Redis 可选，未配置时自动降级为直接读取数据库
 - 必需环境变量:
   - `DATABASE_URL`
@@ -38,6 +65,31 @@ AI 在线知识库（公开站 + 管理后台 + 混合搜索）。
 source ~/.nvm/nvm.sh
 nvm use
 ```
+
+### 本地库 / 线上库切换
+
+项目支持在同一套代码下切换本地 PostgreSQL 与线上 Supabase：
+
+1. 在 `.env` 中配置：`DATABASE_URL_LOCAL` 与 `DATABASE_URL_ONLINE`
+2. 使用下面的脚本命令运行
+
+```bash
+# 本地数据库开发
+npm run dev:local
+
+# 线上数据库联调（谨慎）
+npm run dev:online
+
+# 本地迁移 / 种子
+npm run db:migrate:local
+npm run db:seed:local
+
+# 线上迁移 / 种子（谨慎）
+npm run db:migrate:online
+npm run db:seed:online
+```
+
+注意：`online` 命令会直接操作线上数据库，只建议在确认环境后执行。
 
 ### 首次准备
 
@@ -73,15 +125,9 @@ export REDIS_URL="redis://127.0.0.1:6379"
 
 ### 本地运行
 
-#### 方式 A：使用项目自带本地 MySQL
+#### 方式 A：使用 PostgreSQL / Supabase
 
-启动本地 MySQL：
-
-```bash
-bash scripts/dev-mysql-local.sh
-```
-
-脚本默认会在 `127.0.0.1:3307` 启动数据库，并输出对应的 `DATABASE_URL`。
+把 Supabase 或本地 PostgreSQL 的连接串写入 `DATABASE_URL`。
 
 推荐的本地测试命令：
 
@@ -89,7 +135,7 @@ bash scripts/dev-mysql-local.sh
 source ~/.nvm/nvm.sh
 nvm use
 
-export DATABASE_URL="mysql://knowledgeai:knowledgeai_dev@127.0.0.1:3307/knowledgeai"
+export DATABASE_URL="postgresql://knowledgeai:knowledgeai_dev@127.0.0.1:5432/knowledgeai?schema=public"
 export AUTH_SECRET="knowledgeai-e2e-secret"
 # 可选：启用 Redis 缓存
 # export REDIS_URL="redis://127.0.0.1:6379"
@@ -129,13 +175,7 @@ npm run test:e2e:headed -- --project=chromium
 npm run test:e2e:report
 ```
 
-停止本地 MySQL：
-
-```bash
-bash scripts/stop-mysql-local.sh
-```
-
-#### 方式 B：使用你自己的 MySQL
+#### 方式 B：使用你自己的 PostgreSQL
 
 复制环境变量模板并填入你自己的数据库连接：
 
@@ -146,7 +186,7 @@ cp .env.example .env.local
 最少需要配置：
 
 ```env
-DATABASE_URL="mysql://user:password@localhost:3306/knowledgeai"
+DATABASE_URL="postgresql://user:password@localhost:5432/knowledgeai?schema=public"
 AUTH_SECRET="replace-with-a-long-random-string"
 REDIS_URL="redis://127.0.0.1:6379"
 ```
@@ -229,14 +269,14 @@ npm run test:e2e -- --project=chromium
 CI 需要提供以下环境变量：
 
 ```env
-DATABASE_URL=mysql://knowledgeai:knowledgeai_dev@127.0.0.1:3307/knowledgeai
+DATABASE_URL=postgresql://knowledgeai:knowledgeai_dev@127.0.0.1:5432/knowledgeai?schema=public
 AUTH_SECRET=knowledgeai-e2e-secret
 REDIS_URL=redis://127.0.0.1:6379
 ```
 
 如果 CI 没有 Redis，也可以省略 `REDIS_URL`，应用会自动降级。
 
-如果 CI 自己启动 MySQL 服务，确保：
+如果 CI 自己启动 PostgreSQL 服务，确保：
 
 - 数据库在执行测试前已可连接
 - 目标数据库允许 `prisma migrate reset`
@@ -244,7 +284,7 @@ REDIS_URL=redis://127.0.0.1:6379
 
 ### GitHub Actions Workflow
 
-仓库已经提供 [e2e.yml](file:///Users/a840251442/面试/github专用/knowledgeAI/.github/workflows/e2e.yml)，下面的内容是当前 workflow 的等价示例：
+仓库当前提供 [ci.yml](.github/workflows/ci.yml) 与 [deploy-prod.yml](.github/workflows/deploy-prod.yml)，下面的内容是当前 CI 的等价示例：
 
 ```yaml
 name: e2e
@@ -257,22 +297,21 @@ jobs:
   playwright:
     runs-on: ubuntu-latest
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_DATABASE: knowledgeai
-          MYSQL_USER: knowledgeai
-          MYSQL_PASSWORD: knowledgeai_dev
-          MYSQL_ROOT_PASSWORD: knowledgeai_root
+          POSTGRES_DB: knowledgeai
+          POSTGRES_USER: knowledgeai
+          POSTGRES_PASSWORD: knowledgeai_dev
         ports:
-          - 3307:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pknowledgeai_root"
+          --health-cmd="pg_isready -U knowledgeai -d knowledgeai"
           --health-interval=5s
           --health-timeout=3s
           --health-retries=30
     env:
-      DATABASE_URL: mysql://knowledgeai:knowledgeai_dev@127.0.0.1:3307/knowledgeai
+      DATABASE_URL: postgresql://knowledgeai:knowledgeai_dev@127.0.0.1:5432/knowledgeai?schema=public
       AUTH_SECRET: knowledgeai-e2e-secret
     steps:
       - uses: actions/checkout@v4
@@ -301,14 +340,14 @@ jobs:
 - 缓存 key：首页最近更新、文章详情、搜索结果、热门标签
 - read-through 缓存：文章详情、搜索结果、首页最近更新、热门标签
 - 失效钩子：文章 `update / publish / unpublish / delete` 后失效详情缓存并提升列表/搜索/热门标签版本
-- 降级策略：`REDIS_URL` 缺失或 Redis 临时不可用时，自动回退为直接访问 MySQL
+- 降级策略：`REDIS_URL` 缺失或 Redis 临时不可用时，自动回退为直接访问数据库
 
 ### 当前语义检索实现
 
 - 切片逻辑：`src/lib/ai/chunking.ts`，按 Markdown 标题层级和块大小生成 `ArticleChunk`
 - embedding 逻辑：`src/services/embedding.service.ts`，生成本地 mock embedding 签名并写入 `embeddingVectorRef`
 - `Qdrant` 接入边界：`src/config/ai.ts` 与 `src/lib/ai/qdrant.ts` 已就位，后续真实向量检索会直接复用这层 client / collection 封装
-- 向量存储：`src/lib/ai/vector-store.ts`，基于 MySQL 中的 `ArticleChunk` 实现轻量相似度召回
+- 向量存储：`src/lib/ai/vector-store.ts`，基于数据库中的 `ArticleChunk` 实现轻量相似度召回
 - 重建索引：`src/services/reindex.service.ts`，`update / publish` 时自动执行；也支持 `npm run embeddings:backfill` 与 `npm run reindex:all`
 - 搜索融合：`src/services/search.service.ts` 会把关键词结果与语义召回结果按配置权重做 `HYBRID` 排序
 - 搜索页组件：`src/components/search/SearchBox.tsx`、`src/components/search/SearchFilters.tsx`、`src/components/search/SearchResultCard.tsx`、`src/components/search/SearchResults.tsx`
