@@ -34,6 +34,21 @@ test("admin session survives visiting public site", async ({ page }) => {
   await expect(page.getByRole("link", { name: "新建文章" })).toBeVisible();
 });
 
+test("register tab can create personal account and enter admin articles", async ({ page }) => {
+  const email = `admin-tab-register-${Date.now()}@knowledgeai.dev`;
+  const password = "Writer#123456";
+
+  await page.goto("/admin/login");
+  await page.getByRole("button", { name: "去注册" }).click();
+  await page.getByTestId(adminLoginSelectors.email).fill(email);
+  await page.getByTestId(adminLoginSelectors.password).fill(password);
+  await page.getByPlaceholder("确认密码").fill(password);
+  await page.getByTestId(adminLoginSelectors.submit).click();
+
+  await expect(page).toHaveURL(/\/admin\/articles$/);
+  await expect(page.getByRole("link", { name: "新建文章" })).toBeVisible();
+});
+
 test("admin login shows error on invalid password", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByTestId(adminLoginSelectors.email).fill("admin@knowledgeai.dev");

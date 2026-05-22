@@ -1,6 +1,31 @@
 import { prisma } from "@/lib/db/prisma";
 import { invalidatePublicContentCaches } from "@/lib/redis/cache";
 import { reindexArticleById } from "@/services/reindex.service";
+import type { AuthRole } from "@/lib/auth/session";
+
+type ArticleActor = {
+  id: string;
+  role: AuthRole;
+};
+
+function whereForActor(actor: ArticleActor) {
+  if (actor.role === "ADMIN") return {};
+  return { personalAuthorId: actor.id };
+}
+
+async function assertArticleAccessible(id: string, actor: ArticleActor) {
+  const article = await prisma.article.findUnique({
+    where: { id },
+    select: { id: true, slug: true, personalAuthorId: true },
+  });
+
+  if (!article) throw new Error("ARTICLE_NOT_FOUND");
+  if (actor.role === "PERSONAL" && article.personalAuthorId !== actor.id) {
+    throw new Error("ARTICLE_FORBIDDEN");
+  }
+
+  return article;
+}
 
 async function assertArticleSlugAvailable(input: { slug: string; excludeId?: string }) {
   const hit = await prisma.article.findUnique({
@@ -12,9 +37,9 @@ async function assertArticleSlugAvailable(input: { slug: string; excludeId?: str
   throw new Error("Slug 已存在");
 }
 
-export async function getAdminArticleById(id: string) {
-  const row = await prisma.article.findUnique({
-    where: { id },
+export async function getAdminArticleById(id: string, actor: ArticleActor) {
+  const row = await prisma.article.findFirst({
+    where: { id, ...whereForActor(actor) },
     select: {
       id: true,
       title: true,
@@ -45,13 +70,15 @@ export async function getAdminArticleById(id: string) {
   };
 }
 
-export async function listAdminArticles(input?: { page?: number; pageSize?: number }) {
+export async function listAdminArticles(input?: { page?: number; pageSize?: number; actor?: ArticleActor }) {
   const page = input?.page ?? 1;
   const pageSize = input?.pageSize ?? 20;
+  const where = input?.actor ? whereForActor(input.actor) : {};
 
   const [total, rows] = await Promise.all([
-    prisma.article.count(),
+    prisma.article.count({ where }),
     prisma.article.findMany({
+      where,
       orderBy: [{ updatedAt: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -92,7 +119,7 @@ export async function createAdminArticle(input: {
   contentMarkdown: string;
   categoryId: string;
   tagIds?: string[];
-  adminAuthorId: string;
+  actor: ArticleActor;
 }) {
   await assertArticleSlugAvailable({ slug: input.slug });
   const article = await prisma.article.create({
@@ -102,7 +129,9 @@ export async function createAdminArticle(input: {
       summary: input.summary ?? null,
       contentMarkdown: input.contentMarkdown,
       categoryId: input.categoryId,
-      adminAuthorId: input.adminAuthorId,
+      ...(input.actor.role === "ADMIN"
+        ? { adminAuthorId: input.actor.id }
+        : { personalAuthorId: input.actor.id }),
       status: "DRAFT",
       tags: input.tagIds?.length
         ? {
@@ -126,7 +155,10 @@ export async function updateAdminArticle(id: string, input: {
   contentMarkdown?: string;
   categoryId?: string;
   tagIds?: string[];
+  actor: ArticleActor;
 }) {
+  await assertArticleAccessible(id, input.actor);
+
   if (typeof input.slug === "string") {
     await assertArticleSlugAvailable({ slug: input.slug, excludeId: id });
   }
@@ -172,11 +204,8 @@ export async function updateAdminArticle(id: string, input: {
   return { id: updated.id };
 }
 
-export async function deleteAdminArticle(id: string) {
-  const before = await prisma.article.findUnique({
-    where: { id },
-    select: { slug: true },
-  });
+export async function deleteAdminArticle(id: string, actor: ArticleActor) {
+  const before = await assertArticleAccessible(id, actor);
   await prisma.article.delete({ where: { id } });
 
   await invalidatePublicContentCaches({
@@ -189,7 +218,8 @@ export async function deleteAdminArticle(id: string) {
   return { id };
 }
 
-export async function publishAdminArticle(id: string) {
+export async function publishAdminArticle(id: string, actor: ArticleActor) {
+  await assertArticleAccessible(id, actor);
   const updated = await prisma.article.update({
     where: { id },
     data: { status: "PUBLISHED", publishedAt: new Date() },
@@ -211,7 +241,8 @@ export async function publishAdminArticle(id: string) {
   return { id: updated.id };
 }
 
-export async function unpublishAdminArticle(id: string) {
+export async function unpublishAdminArticle(id: string, actor: ArticleActor) {
+  await assertArticleAccessible(id, actor);
   const updated = await prisma.article.update({
     where: { id },
     data: { status: "DRAFT", publishedAt: null },

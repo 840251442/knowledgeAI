@@ -1,12 +1,12 @@
 import { apiError } from "@/lib/api/response";
-import { requireAdminUserId } from "@/lib/auth/require-admin";
+import { requireRole } from "@/lib/auth/require-role";
 import { streamArticleDraft } from "@/services/ai-article-agent.service";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const userId = await requireAdminUserId();
-  if (!userId) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
 
   let payload: unknown;
   try {

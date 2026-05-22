@@ -5,8 +5,9 @@ import { listAdminReviewQueue } from "@/services/review.service";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const user = await requireRole(["ADMIN"]);
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
   if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  if (user.role !== "ADMIN") return apiError("无权限", { status: 403, code: "FORBIDDEN" });
 
   try {
     const items = await listAdminReviewQueue();

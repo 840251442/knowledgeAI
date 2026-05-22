@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { apiError, apiOk } from "@/lib/api/response";
 import { createSessionToken, getSessionCookieName } from "@/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
+import { loginPersonalWithPassword } from "@/services/auth.service";
 import { verifyAdminLogin } from "@/services/admin-auth.service";
 
 export const runtime = "nodejs";
@@ -32,25 +33,42 @@ export async function POST(request: Request) {
   }
 
   try {
-    const user = await verifyAdminLogin({ email, password });
-    if (!user) {
+    const adminUser = await verifyAdminLogin({ email, password });
+    if (adminUser) {
+      const token = createSessionToken({ userId: adminUser.id, role: "ADMIN", issuedAt: Date.now() });
+      if (!token) {
+        return apiError("AUTH_SECRET 未配置", { status: 500, code: "MISSING_AUTH_SECRET" });
+      }
+
+      const cookieStore = await cookies();
+      cookieStore.set(getSessionCookieName("ADMIN"), token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+      });
+
+      return apiOk({ userId: adminUser.id, email: adminUser.email, role: "ADMIN" as const });
+    }
+
+    const personalResult = await loginPersonalWithPassword({ identifier: email, password });
+    if (!personalResult) {
       return apiError("邮箱或密码错误", { status: 401, code: "INVALID_CREDENTIALS" });
     }
 
-    const token = createSessionToken({ userId: user.id, role: "ADMIN", issuedAt: Date.now() });
-    if (!token) {
-      return apiError("AUTH_SECRET 未配置", { status: 500, code: "MISSING_AUTH_SECRET" });
-    }
-
     const cookieStore = await cookies();
-    cookieStore.set(getSessionCookieName("ADMIN"), token, {
+    cookieStore.set(getSessionCookieName("PERSONAL"), personalResult.token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
     });
 
-    return apiOk({ userId: user.id, email: user.email });
+    return apiOk({
+      userId: personalResult.principal.id,
+      email: personalResult.principal.email,
+      role: personalResult.principal.role,
+    });
   } catch (err) {
     const raw = err instanceof Error ? err.message : "";
     if (raw.includes("Environment variable not found: DATABASE_URL")) {

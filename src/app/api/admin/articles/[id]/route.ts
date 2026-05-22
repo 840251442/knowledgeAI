@@ -1,5 +1,5 @@
 import { apiError, apiOk } from "@/lib/api/response";
-import { requireAdminUserId } from "@/lib/auth/require-admin";
+import { requireRole } from "@/lib/auth/require-role";
 import {
   deleteAdminArticle,
   getAdminArticleById,
@@ -13,13 +13,13 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = await requireAdminUserId();
-  if (!userId) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
 
   const { id } = await params;
 
   try {
-    const article = await getAdminArticleById(id);
+    const article = await getAdminArticleById(id, { id: user.id, role: user.role });
     if (!article) return apiError("未找到文章", { status: 404, code: "NOT_FOUND" });
     return apiOk(article);
   } catch (err) {
@@ -35,8 +35,8 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = await requireAdminUserId();
-  if (!userId) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
 
   const { id } = await params;
 
@@ -69,10 +69,13 @@ export async function PUT(
       ...(typeof body.contentMarkdown === "string" ? { contentMarkdown: body.contentMarkdown } : undefined),
       ...(typeof body.categoryId === "string" ? { categoryId: body.categoryId } : undefined),
       ...(tagIds ? { tagIds } : undefined),
+      actor: { id: user.id, role: user.role },
     });
     return apiOk(updated);
   } catch (err) {
     const raw = err instanceof Error ? err.message : "";
+    if (raw === "ARTICLE_FORBIDDEN") return apiError("无权限", { status: 403, code: "FORBIDDEN" });
+    if (raw === "ARTICLE_NOT_FOUND") return apiError("未找到文章", { status: 404, code: "NOT_FOUND" });
     if (raw === "Slug 已存在") return apiError(raw, { status: 400, code: "SLUG_TAKEN" });
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return apiError("Slug 已存在", { status: 400, code: "SLUG_TAKEN" });
@@ -88,15 +91,17 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = await requireAdminUserId();
-  if (!userId) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
 
   const { id } = await params;
   try {
-    const deleted = await deleteAdminArticle(id);
+    const deleted = await deleteAdminArticle(id, { id: user.id, role: user.role });
     return apiOk(deleted);
   } catch (err) {
     const raw = err instanceof Error ? err.message : "";
+    if (raw === "ARTICLE_FORBIDDEN") return apiError("无权限", { status: 403, code: "FORBIDDEN" });
+    if (raw === "ARTICLE_NOT_FOUND") return apiError("未找到文章", { status: 404, code: "NOT_FOUND" });
     if (raw.includes("Environment variable not found: DATABASE_URL")) {
       return apiError("DATABASE_URL 未配置", { status: 500, code: "MISSING_DATABASE_URL" });
     }

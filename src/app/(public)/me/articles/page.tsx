@@ -21,8 +21,8 @@ function statusLabel(status: string) {
 
 export default async function PersonalArticlesPage() {
   const user = await requireRole(["PERSONAL"]);
-  if (!user) redirect("/auth");
-  if (user.role !== "PERSONAL") redirect("/auth");
+  if (!user) redirect("/admin/login");
+  if (user.role !== "PERSONAL") redirect("/admin/login");
 
   const items = await listPersonalArticles(user.id).catch(() => null);
 
@@ -35,7 +35,7 @@ export default async function PersonalArticlesPage() {
           {user.email ? <span className="statusPill">邮箱：{user.email}</span> : null}
           {user.phone ? <span className="statusPill">手机号：{user.phone}</span> : null}
           <PersonalLogoutButton testId="personal-logout" />
-          <PersonalLogoutButton label="切换账号" redirectTo="/auth?mode=login" testId="personal-switch-account" />
+          <PersonalLogoutButton label="切换账号" redirectTo="/admin/login" testId="personal-switch-account" />
           <Link className="chipLink" href="/">
             返回首页
           </Link>

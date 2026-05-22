@@ -10,7 +10,7 @@ export default function PersonalLogoutButton(props?: {
 }) {
   const [loading, setLoading] = useState(false);
   const label = props?.label ?? "退出登录";
-  const redirectTo = props?.redirectTo ?? "/auth?mode=login";
+  const redirectTo = props?.redirectTo ?? "/admin/login";
   const testId = props?.testId;
 
   async function logout() {

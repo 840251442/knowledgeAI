@@ -1,14 +1,14 @@
 import { apiError, apiOk } from "@/lib/api/response";
 import { parsePositiveInt } from "@/lib/api/query";
-import { requireAdminUserId } from "@/lib/auth/require-admin";
+import { requireRole } from "@/lib/auth/require-role";
 import { createAdminArticle, listAdminArticles } from "@/services/admin-article.service";
 import { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const userId = await requireAdminUserId();
-  if (!userId) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
 
   const url = new URL(request.url);
   const page = parsePositiveInt(url.searchParams.get("page"), { defaultValue: 1, min: 1 });
@@ -19,7 +19,11 @@ export async function GET(request: Request) {
   });
 
   try {
-    const result = await listAdminArticles({ page, pageSize });
+    const result = await listAdminArticles({
+      page,
+      pageSize,
+      actor: { id: user.id, role: user.role },
+    });
     return apiOk({ ...result, page, pageSize });
   } catch (err) {
     const raw = err instanceof Error ? err.message : "";
@@ -31,8 +35,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const userId = await requireAdminUserId();
-  if (!userId) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
 
   let payload: unknown;
   try {
@@ -72,7 +76,7 @@ export async function POST(request: Request) {
       contentMarkdown,
       categoryId,
       tagIds,
-      adminAuthorId: userId,
+      actor: { id: user.id, role: user.role },
     });
     return apiOk(created, { status: 201 });
   } catch (err) {

@@ -1,32 +1,8 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Button } from "antd";
-
-import PublicAuthModal from "@/components/auth/PublicAuthModal";
 
 import "./public.css";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [openAuth, setOpenAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
-
-  useEffect(() => {
-    if (!openAuth) return;
-
-    function onKeydown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpenAuth(false);
-      }
-    }
-
-    window.addEventListener("keydown", onKeydown);
-    return () => {
-      window.removeEventListener("keydown", onKeydown);
-    };
-  }, [openAuth]);
-
   return (
     <div className="publicShell">
       <header className="topbar">
@@ -44,25 +20,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link className="chipLink" href="/admin/login">
             后台
           </Link>
-          <Button
-            className="chipLink chipLinkPrimary"
-            htmlType="button"
-            onClick={() => {
-              setAuthMode("login");
-              setOpenAuth(true);
-            }}
-          >
-            登录
-          </Button>
         </nav>
       </header>
       {children}
-      <PublicAuthModal
-        open={openAuth}
-        mode={authMode}
-        onClose={() => setOpenAuth(false)}
-        onModeChange={setAuthMode}
-      />
     </div>
   );
 }

@@ -20,9 +20,10 @@ async function loginPersonalByApi(page: Page, email: string, password: string) {
 }
 
 test("personal submit publish should enter ai review workflow", async ({ page }) => {
-  await loginPersonalByApi(page, "writer1@knowledgeai.dev", "Writer#123456");
+  const stamp = Date.now();
+  await loginPersonalByApi(page, `writer-${stamp}@knowledgeai.dev`, "Writer#123456");
 
-  const createResult = await page.evaluate(async () => {
+  const createResult = await page.evaluate(async ({ stamp }) => {
     const categoriesResponse = await fetch(
       new URL("/api/categories", window.location.origin).toString(),
     );
@@ -39,15 +40,15 @@ test("personal submit publish should enter ai review workflow", async ({ page })
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        title: "个人文章",
-        slug: "personal-article-e2e",
+        title: `个人文章-${stamp}`,
+        slug: `personal-article-e2e-${stamp}`,
         contentMarkdown: "# hello",
         categoryId: backendCategory.id,
         tagIds: [],
       }),
     });
     return { ok: response.ok, status: response.status, body: await response.json() };
-  });
+  }, { stamp });
   expect(createResult.ok).toBeTruthy();
 
   const created = createResult.body as { success: boolean; data?: { id?: string } };
@@ -63,6 +64,18 @@ test("personal submit publish should enter ai review workflow", async ({ page })
   const submitJson = submitResult.body as { success: boolean; data?: { status?: string } };
   expect(submitJson.success).toBeTruthy();
   expect(submitJson.data?.status).toBe("PENDING_REVIEW");
+});
+
+test("personal user cannot access admin review api", async ({ page }) => {
+  await loginPersonalByApi(page, `writer-review-${Date.now()}@knowledgeai.dev`, "Writer#123456");
+
+  const queueResult = await page.evaluate(async () => {
+    const response = await fetch(new URL("/api/admin/reviews", window.location.origin).toString());
+    return { ok: response.ok, status: response.status, body: await response.json() };
+  });
+
+  expect(queueResult.ok).toBeFalsy();
+  expect(queueResult.status).toBe(403);
 });
 
 test("ai rejected article should enter admin manual queue", async ({ page }) => {

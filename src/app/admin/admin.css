@@ -606,6 +606,21 @@
   padding: 18px;
 }
 
+.adminLoginBrand {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 12px;
+}
+
+.adminLoginBrandImage {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 2px solid rgba(134, 199, 255, 0.72);
+  box-shadow: 0 10px 24px rgba(32, 156, 255, 0.34);
+}
+
 .adminLoginCard h1 {
   margin: 0;
   font-size: 24px;
@@ -618,13 +633,32 @@
 }
 
 .adminLoginForm {
-  margin-top: 18px;
+  margin-top: 8px;
   display: grid;
   gap: 12px;
 }
 
 .adminLoginSubmit {
   width: 100%;
+}
+
+.adminLoginSwitch {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.adminLoginInlineBtn {
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #3ec6ff;
+}
+
+.adminLoginInlineBtn:hover {
+  color: #76d7ff;
+  transform: none;
 }
 
 .adminLoginError {

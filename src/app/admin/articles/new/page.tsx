@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 
 import ArticleEditor from "@/components/admin/ArticleEditor";
-import { requireAdminUserId } from "@/lib/auth/require-admin";
+import { requireRole } from "@/lib/auth/require-role";
 import { listAdminCategories } from "@/services/admin-category.service";
 import { listAdminTags } from "@/services/admin-tag.service";
 
 export default async function AdminNewArticlePage() {
-  const userId = await requireAdminUserId();
-  if (!userId) redirect("/admin/login");
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) redirect("/admin/login");
 
   let categories: Awaited<ReturnType<typeof listAdminCategories>>;
   let tags: Awaited<ReturnType<typeof listAdminTags>>;

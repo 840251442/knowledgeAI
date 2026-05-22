@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Button } from "antd";
 
-import { requireAdminUserId } from "@/lib/auth/require-admin";
+import { requireRole } from "@/lib/auth/require-role";
 import { listAdminArticles } from "@/services/admin-article.service";
 
 export const dynamic = "force-dynamic";
@@ -13,15 +13,19 @@ function getStatusLabel(status: string) {
 }
 
 export default async function AdminArticlesPage() {
-  const userId = await requireAdminUserId();
-  if (!userId) redirect("/admin/login");
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) redirect("/admin/login");
 
   let data:
     | { type: "ok"; total: number; items: Awaited<ReturnType<typeof listAdminArticles>>["items"] }
     | { type: "error"; message: string };
 
   try {
-    const result = await listAdminArticles({ page: 1, pageSize: 50 });
+    const result = await listAdminArticles({
+      page: 1,
+      pageSize: 50,
+      actor: { id: user.id, role: user.role },
+    });
     data = { type: "ok", total: result.total, items: result.items };
   } catch (err) {
     const raw = err instanceof Error ? err.message : "";

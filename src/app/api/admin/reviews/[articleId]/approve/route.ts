@@ -8,8 +8,9 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ articleId: string }> },
 ) {
-  const user = await requireRole(["ADMIN"]);
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
   if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
+  if (user.role !== "ADMIN") return apiError("无权限", { status: 403, code: "FORBIDDEN" });
 
   const { articleId } = await params;
   let payload: unknown;

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import ArticleEditor from "@/components/admin/ArticleEditor";
-import { requireAdminUserId } from "@/lib/auth/require-admin";
+import { requireRole } from "@/lib/auth/require-role";
 import { getAdminArticleById } from "@/services/admin-article.service";
 import { listAdminCategories } from "@/services/admin-category.service";
 import { listAdminTags } from "@/services/admin-tag.service";
@@ -11,8 +11,8 @@ export default async function AdminEditArticlePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const userId = await requireAdminUserId();
-  if (!userId) redirect("/admin/login");
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
+  if (!user) redirect("/admin/login");
 
   const { id } = await params;
 
@@ -22,7 +22,7 @@ export default async function AdminEditArticlePage({
 
   try {
     [article, categories, tags] = await Promise.all([
-      getAdminArticleById(id),
+      getAdminArticleById(id, { id: user.id, role: user.role }),
       listAdminCategories(),
       listAdminTags(),
     ]);

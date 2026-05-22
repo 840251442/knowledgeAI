@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("published article is visible in home and detail page", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("button", { name: "登录" })).toHaveCount(0);
   await expect(page.getByText("Redis 缓存策略实践指南")).toBeVisible();
 
   await page.goto("/articles/redis-cache-strategy");
