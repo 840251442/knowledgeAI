@@ -7,6 +7,7 @@ import { Button, Input, Select, message } from "antd";
 import remarkGfm from "remark-gfm";
 
 import { slugifyHeading } from "@/lib/markdown/slug";
+import { authFetch } from "./adminApi";
 
 type CategoryOption = { id: string; name: string; slug: string };
 type TagOption = { id: string; name: string; slug: string };
@@ -103,7 +104,7 @@ export default function ArticleEditor(props: {
     setAiState("generating");
 
     try {
-      const res = await fetch("/api/admin/ai/draft/stream", {
+      const res = await authFetch("/api/admin/ai/draft/stream", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ keyword }),
@@ -180,7 +181,7 @@ export default function ArticleEditor(props: {
     setState({ type: "saving" });
     try {
       if (props.mode === "create") {
-        const res = await fetch("/api/admin/articles", {
+        const res = await authFetch("/api/admin/articles", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -204,7 +205,7 @@ export default function ArticleEditor(props: {
       }
 
       const id = props.initial.id;
-      const res = await fetch(`/api/admin/articles/${id}`, {
+      const res = await authFetch(`/api/admin/articles/${id}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -235,7 +236,7 @@ export default function ArticleEditor(props: {
     setState({ type: "publishing" });
     try {
       if (props.mode === "create") {
-        const createRes = await fetch("/api/admin/articles", {
+        const createRes = await authFetch("/api/admin/articles", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -256,7 +257,7 @@ export default function ArticleEditor(props: {
         }
 
         const id = createJson.data.id;
-        const publishRes = await fetch(`/api/admin/articles/${id}/publish`, { method: "POST" });
+        const publishRes = await authFetch(`/api/admin/articles/${id}/publish`, { method: "POST" });
         const publishJson = (await publishRes.json()) as
           | { success: true; data: { id: string } }
           | { success: false; error: { message: string } };
@@ -274,7 +275,7 @@ export default function ArticleEditor(props: {
 
       const id = props.initial.id;
       if (!id) return;
-      const res = await fetch(`/api/admin/articles/${id}/publish`, { method: "POST" });
+      const res = await authFetch(`/api/admin/articles/${id}/publish`, { method: "POST" });
       const json = (await res.json()) as
         | { success: true; data: { id: string } }
         | { success: false; error: { message: string } };
@@ -296,7 +297,7 @@ export default function ArticleEditor(props: {
     if (!id) return;
     setState({ type: "unpublishing" });
     try {
-      const res = await fetch(`/api/admin/articles/${id}/unpublish`, { method: "POST" });
+      const res = await authFetch(`/api/admin/articles/${id}/unpublish`, { method: "POST" });
       const json = (await res.json()) as
         | { success: true; data: { id: string } }
         | { success: false; error: { message: string } };
@@ -319,7 +320,7 @@ export default function ArticleEditor(props: {
     if (!ok) return;
     setState({ type: "deleting" });
     try {
-      const res = await fetch(`/api/admin/articles/${id}`, { method: "DELETE" });
+      const res = await authFetch(`/api/admin/articles/${id}`, { method: "DELETE" });
       const json = (await res.json()) as
         | { success: true; data: { id: string } }
         | { success: false; error: { message: string } };

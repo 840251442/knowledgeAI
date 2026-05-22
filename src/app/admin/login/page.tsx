@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Input } from "antd";
 import Image from "next/image";
+import { loadAuthSession, refreshAuthSession, saveAuthSession } from "@/lib/auth/client-session";
 
 type LoginState =
   | { type: "idle" }
@@ -11,6 +12,13 @@ type LoginState =
 
 type AuthMode = "login" | "register";
 
+type LoginSuccessPayload = {
+  userId: string;
+  role: "ADMIN" | "PERSONAL";
+  accessToken: string;
+  accessTokenExpiresIn: number;
+};
+
 export default function AdminLoginPage() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -18,6 +26,36 @@ export default function AdminLoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [state, setState] = useState<LoginState>({ type: "idle" });
   const [successMessage, setSuccessMessage] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function ensureSession() {
+      const local = loadAuthSession();
+      if (local && local.accessTokenExpiresAt > Date.now()) {
+        if (!cancelled) {
+          window.location.replace("/admin/articles");
+        }
+        return;
+      }
+
+      const refreshed = await refreshAuthSession();
+      if (refreshed && !cancelled) {
+        window.location.replace("/admin/articles");
+        return;
+      }
+
+      if (!cancelled) {
+        setCheckingSession(false);
+      }
+    }
+
+    void ensureSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const canSubmit = useMemo(() => {
     if (!email.trim() || !password) return false;
@@ -50,12 +88,19 @@ export default function AdminLoginPage() {
         body: JSON.stringify(payload),
       });
       const json = (await res.json()) as
-        | { success: true; data: unknown }
+        | { success: true; data: LoginSuccessPayload }
         | { success: false; error: { message: string } };
       if (!res.ok || !json.success) {
         setState({ type: "error", message: json.success ? "认证失败" : json.error.message });
         return;
       }
+
+      saveAuthSession({
+        accessToken: json.data.accessToken,
+        accessTokenExpiresIn: json.data.accessTokenExpiresIn,
+        role: json.data.role,
+        userId: json.data.userId,
+      });
 
       if (mode === "register") {
         setSuccessMessage("注册成功，正在进入后台…");
@@ -66,6 +111,25 @@ export default function AdminLoginPage() {
     } catch {
       setState({ type: "error", message: "网络错误" });
     }
+  }
+
+  if (checkingSession) {
+    return (
+      <main className="adminLoginPage">
+        <div className="adminLoginCard">
+          <div className="adminLoginBrand" aria-hidden="true">
+            <Image
+              className="adminLoginBrandImage"
+              src="/assets/login-mascot.png"
+              alt=""
+              width={72}
+              height={72}
+            />
+          </div>
+          <div className="subMuted">正在检查登录状态…</div>
+        </div>
+      </main>
+    );
   }
 
   return (

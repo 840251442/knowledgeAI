@@ -1,7 +1,15 @@
 import { cookies } from "next/headers";
 
 import { apiError, apiOk } from "@/lib/api/response";
-import { createSessionToken, getSessionCookieName } from "@/lib/auth/session";
+import {
+  createAccessToken,
+  createRefreshToken,
+  createSessionToken,
+  getAccessTokenTtlSeconds,
+  getRefreshCookieName,
+  getRefreshTokenTtlSeconds,
+  getSessionCookieName,
+} from "@/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { loginPersonalWithPassword } from "@/services/auth.service";
 import { verifyAdminLogin } from "@/services/admin-auth.service";
@@ -35,20 +43,35 @@ export async function POST(request: Request) {
   try {
     const adminUser = await verifyAdminLogin({ email, password });
     if (adminUser) {
-      const token = createSessionToken({ userId: adminUser.id, role: "ADMIN", issuedAt: Date.now() });
-      if (!token) {
+      const sessionToken = createSessionToken({ userId: adminUser.id, role: "ADMIN", issuedAt: Date.now() });
+      const accessToken = createAccessToken({ userId: adminUser.id, role: "ADMIN" });
+      const refreshToken = createRefreshToken({ userId: adminUser.id, role: "ADMIN" });
+      if (!sessionToken || !accessToken || !refreshToken) {
         return apiError("AUTH_SECRET 未配置", { status: 500, code: "MISSING_AUTH_SECRET" });
       }
 
       const cookieStore = await cookies();
-      cookieStore.set(getSessionCookieName("ADMIN"), token, {
+      cookieStore.set(getSessionCookieName("ADMIN"), sessionToken, {
         httpOnly: true,
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         path: "/",
       });
+      cookieStore.set(getRefreshCookieName("ADMIN"), refreshToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: getRefreshTokenTtlSeconds(),
+      });
 
-      return apiOk({ userId: adminUser.id, email: adminUser.email, role: "ADMIN" as const });
+      return apiOk({
+        userId: adminUser.id,
+        email: adminUser.email,
+        role: "ADMIN" as const,
+        accessToken,
+        accessTokenExpiresIn: getAccessTokenTtlSeconds(),
+      });
     }
 
     const personalResult = await loginPersonalWithPassword({ identifier: email, password });
@@ -64,10 +87,31 @@ export async function POST(request: Request) {
       path: "/",
     });
 
+    const accessToken = createAccessToken({
+      userId: personalResult.principal.id,
+      role: personalResult.principal.role,
+    });
+    const refreshToken = createRefreshToken({
+      userId: personalResult.principal.id,
+      role: personalResult.principal.role,
+    });
+    if (!accessToken || !refreshToken) {
+      return apiError("AUTH_SECRET 未配置", { status: 500, code: "MISSING_AUTH_SECRET" });
+    }
+    cookieStore.set(getRefreshCookieName("PERSONAL"), refreshToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: getRefreshTokenTtlSeconds(),
+    });
+
     return apiOk({
       userId: personalResult.principal.id,
       email: personalResult.principal.email,
       role: personalResult.principal.role,
+      accessToken,
+      accessTokenExpiresIn: getAccessTokenTtlSeconds(),
     });
   } catch (err) {
     const raw = err instanceof Error ? err.message : "";

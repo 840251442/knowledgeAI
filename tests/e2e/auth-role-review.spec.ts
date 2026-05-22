@@ -78,6 +78,52 @@ test("personal user cannot access admin review api", async ({ page }) => {
   expect(queueResult.status).toBe(403);
 });
 
+test("personal user should only see own articles in admin list api", async ({ page }) => {
+  const stamp = Date.now();
+  await loginPersonalByApi(page, `writer-own-${stamp}@knowledgeai.dev`, "Writer#123456");
+
+  const createResult = await page.evaluate(async ({ stamp }) => {
+    const categoriesResponse = await fetch(new URL("/api/categories", window.location.origin).toString());
+    const categoriesJson = (await categoriesResponse.json()) as {
+      success: boolean;
+      data?: Array<{ id: string; slug: string }>;
+    };
+    const backendCategory = categoriesJson.data?.find((category) => category.slug === "backend");
+    if (!backendCategory?.id) {
+      return { ok: false, status: 500, body: { success: false, error: { message: "缺少分类" } } };
+    }
+
+    const response = await fetch(new URL("/api/admin/articles", window.location.origin).toString(), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        title: `个人后台文章-${stamp}`,
+        slug: `personal-admin-own-${stamp}`,
+        contentMarkdown: "# own",
+        categoryId: backendCategory.id,
+        tagIds: [],
+      }),
+    });
+    return { ok: response.ok, status: response.status, body: await response.json() };
+  }, { stamp });
+  expect(createResult.ok).toBeTruthy();
+
+  const listResult = await page.evaluate(async () => {
+    const response = await fetch(new URL("/api/admin/articles?page=1&pageSize=100", window.location.origin).toString());
+    return { ok: response.ok, status: response.status, body: await response.json() };
+  });
+  expect(listResult.ok).toBeTruthy();
+
+  const listJson = listResult.body as {
+    success: boolean;
+    data?: { items?: Array<{ slug: string }> };
+  };
+  expect(listJson.success).toBeTruthy();
+  const items = listJson.data?.items ?? [];
+  expect(items.length).toBe(1);
+  expect(items[0]?.slug.startsWith("personal-admin-own-")).toBeTruthy();
+});
+
 test("ai rejected article should enter admin manual queue", async ({ page }) => {
   await loginAsAdmin(page);
 

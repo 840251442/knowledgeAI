@@ -54,6 +54,30 @@
   gap: 6px;
 }
 
+.sidebarSkeleton {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.sidebarSkeletonItem {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(109, 149, 228, 0.3);
+  background: linear-gradient(90deg, rgba(31, 49, 86, 0.42), rgba(52, 84, 142, 0.3), rgba(31, 49, 86, 0.42));
+  background-size: 240% 100%;
+  animation: sidebarPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sidebarPulse {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
 .navLink {
   display: flex;
   align-items: center;
@@ -98,8 +122,7 @@
 .panel {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  max-height: calc(100dvh - 24px);
+  height: calc(100dvh - 24px);
   border-radius: var(--radius-2);
   border: 1px solid var(--stroke);
   background: linear-gradient(145deg, rgba(15, 24, 46, 0.84), rgba(10, 16, 32, 0.8));
@@ -107,6 +130,77 @@
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
+}
+
+.adminRouteLoading {
+  position: relative;
+  overflow: hidden;
+}
+
+.adminRouteLoadingBar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(6, 216, 255, 0), rgba(6, 216, 255, 0.92), rgba(74, 120, 255, 0));
+  animation: adminRouteLoadingSlide 1.3s ease-in-out infinite;
+}
+
+.adminRouteLoadingBody {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.adminRouteLoadingCard {
+  border: 1px solid rgba(99, 138, 218, 0.44);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(15, 24, 44, 0.84), rgba(10, 16, 31, 0.82));
+  box-shadow: var(--shadow-md);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.adminRouteLoadingLine {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(35, 57, 99, 0.5), rgba(65, 101, 166, 0.45), rgba(35, 57, 99, 0.5));
+  background-size: 220% 100%;
+  animation: adminRouteLoadingPulse 1.4s ease-in-out infinite;
+}
+
+.adminRouteLoadingLineWide {
+  width: 72%;
+}
+
+.adminRouteLoadingLineShort {
+  width: 38%;
+}
+
+@keyframes adminRouteLoadingSlide {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.32;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(290%);
+    opacity: 0.32;
+  }
+}
+
+@keyframes adminRouteLoadingPulse {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
 }
 
 [data-testid="article-editor"] {
@@ -375,6 +469,70 @@
   color: var(--muted);
 }
 
+.adminArticlesEmptyWrap {
+  padding: 20px;
+  min-height: 100%;
+}
+
+.adminArticlesEmptyCard {
+  min-height: 100%;
+  border: 1px solid rgba(99, 138, 218, 0.44);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(6, 216, 255, 0.12), transparent 38%),
+    radial-gradient(circle at 86% 76%, rgba(74, 120, 255, 0.14), transparent 44%),
+    linear-gradient(145deg, rgba(15, 24, 44, 0.84), rgba(10, 16, 31, 0.82));
+  box-shadow: var(--shadow-md);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.adminArticlesPanel {
+  overflow: hidden;
+}
+
+.adminArticlesBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.adminArticlesEmptyIcon {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 1px solid rgba(104, 201, 255, 0.58);
+  background: linear-gradient(145deg, rgba(25, 54, 96, 0.7), rgba(11, 22, 44, 0.7));
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 6px rgba(74, 120, 255, 0.12);
+}
+
+.adminArticlesEmptyCard strong {
+  font-size: 18px;
+  color: #eef4ff;
+}
+
+.adminArticlesEmptyCard p {
+  margin: 0;
+  max-width: 460px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #a8bbdf;
+}
+
+.adminArticlesEmptyActions {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 .pager {
   display: flex;
   align-items: center;
@@ -443,6 +601,10 @@
 .markdownEditor .w-md-editor-text-pre,
 .markdownEditor .w-md-editor-text {
   color: #e9f1ff;
+}
+
+.markdownEditor .w-md-editor-text {
+  height: 100%;
 }
 
 .markdownPreview {

@@ -39,7 +39,7 @@ export default async function AdminArticlesPage() {
 
   return (
     <main>
-      <div className="panel">
+      <div className="panel adminArticlesPanel">
         <div className="panelHeader">
           <div className="panelTitle">
             <strong>文章管理</strong>
@@ -52,54 +52,71 @@ export default async function AdminArticlesPage() {
           </div>
         </div>
 
-        {data.type === "error" ? (
-          <div className="errorBox">{data.message}</div>
-        ) : (
-          <div style={{ padding: 16, display: "grid", gap: 12 }}>
-            {data.items.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  gap: 12,
-                  padding: 14,
-                  borderRadius: 16,
-                  border: "1px solid rgba(255,255,255,.12)",
-                  background: "rgba(255,255,255,.05)",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <strong style={{ fontSize: 14 }}>{item.title}</strong>
-                    <span className="badge">
-                      <span className={item.status === "PUBLISHED" ? "dot dotGreen" : "dot dotWarn"} />
-                      {getStatusLabel(item.status)}
-                    </span>
-                  </div>
-                  <div style={{ marginTop: 8, color: "rgba(255,255,255,.66)", fontSize: 12 }}>
-                    {item.slug} · 分类：{item.category.name} · 更新时间：{item.updatedAt.slice(0, 10)}
-                  </div>
+        <div className="adminArticlesBody">
+          {data.type === "error" ? (
+            <div className="errorBox">{data.message}</div>
+          ) : data.items.length === 0 ? (
+            <div className="adminArticlesEmptyWrap">
+              <div className="adminArticlesEmptyCard" data-testid="admin-articles-empty-state">
+                <div className="adminArticlesEmptyIcon" aria-hidden="true">
+                  <span className="dot dotCyan" />
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Button className="btn" href={`/admin/articles/${item.id}/edit`}>
-                    编辑
+                <strong>还没有文章</strong>
+                <p>先创建第一篇内容，后续可以在这里统一编辑、发布和管理状态。</p>
+                <div className="adminArticlesEmptyActions">
+                  <Button className="btn btnGreen" href="/admin/articles/new" type="primary">
+                    去新建文章
                   </Button>
-                  {item.status === "PUBLISHED" ? (
-                    <Button className="btn btnPrimary" href={`/articles/${item.slug}`} type="primary">
-                      查看
-                    </Button>
-                  ) : (
-                    <span className="badge">
-                      <span className="dot dotWarn" />
-                      未发布
-                    </span>
-                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ) : (
+            <div style={{ padding: 16, display: "grid", gap: 12 }}>
+              {data.items.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto",
+                    gap: 12,
+                    padding: 14,
+                    borderRadius: 16,
+                    border: "1px solid rgba(255,255,255,.12)",
+                    background: "rgba(255,255,255,.05)",
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <strong style={{ fontSize: 14 }}>{item.title}</strong>
+                      <span className="badge">
+                        <span className={item.status === "PUBLISHED" ? "dot dotGreen" : "dot dotWarn"} />
+                        {getStatusLabel(item.status)}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: 8, color: "rgba(255,255,255,.66)", fontSize: 12 }}>
+                      {item.slug} · 分类：{item.category.name} · 更新时间：{item.updatedAt.slice(0, 10)}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Button className="btn" href={`/admin/articles/${item.id}/edit`}>
+                      编辑
+                    </Button>
+                    {item.status === "PUBLISHED" ? (
+                      <Button className="btn btnPrimary" href={`/admin/articles/${item.id}`} type="primary">
+                        详情
+                      </Button>
+                    ) : (
+                      <span className="badge">
+                        <span className="dot dotWarn" />
+                        未发布
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

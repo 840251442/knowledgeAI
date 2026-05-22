@@ -1,7 +1,14 @@
 import { cookies } from "next/headers";
 
 import { apiError, apiOk } from "@/lib/api/response";
-import { getSessionCookieName } from "@/lib/auth/session";
+import {
+  createAccessToken,
+  createRefreshToken,
+  getAccessTokenTtlSeconds,
+  getRefreshCookieName,
+  getRefreshTokenTtlSeconds,
+  getSessionCookieName,
+} from "@/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { buildAuthSessionResponse, loginPersonalWithPhoneOtp } from "@/services/auth.service";
 
@@ -46,7 +53,24 @@ export async function POST(request: Request) {
       path: "/",
     });
 
-    return apiOk(buildAuthSessionResponse(result.principal));
+    const accessToken = createAccessToken({ userId: result.principal.id, role: result.principal.role });
+    const refreshToken = createRefreshToken({ userId: result.principal.id, role: result.principal.role });
+    if (!accessToken || !refreshToken) {
+      return apiError("AUTH_SECRET 未配置", { status: 500, code: "MISSING_AUTH_SECRET" });
+    }
+    cookieStore.set(getRefreshCookieName("PERSONAL"), refreshToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: getRefreshTokenTtlSeconds(),
+    });
+
+    return apiOk({
+      ...buildAuthSessionResponse(result.principal),
+      accessToken,
+      accessTokenExpiresIn: getAccessTokenTtlSeconds(),
+    });
   } catch (error) {
     const raw = error instanceof Error ? error.message : "";
     if (raw === "MISSING_AUTH_SECRET") {

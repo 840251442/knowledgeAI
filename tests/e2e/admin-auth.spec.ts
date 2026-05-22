@@ -6,6 +6,7 @@ import { adminLoginSelectors } from "./support/selectors";
 test("admin login exposes stable test hooks", async ({ page }) => {
   await page.goto("/admin/login");
 
+  await expect(page.locator(".sidebar")).toHaveCount(0);
   await expect(page.getByTestId(adminLoginSelectors.form)).toBeVisible();
   await expect(page.getByTestId(adminLoginSelectors.email)).toBeVisible();
   await expect(page.getByTestId(adminLoginSelectors.password)).toBeVisible();
@@ -47,6 +48,60 @@ test("register tab can create personal account and enter admin articles", async 
 
   await expect(page).toHaveURL(/\/admin\/articles$/);
   await expect(page.getByRole("link", { name: "新建文章" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "文章管理" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "退出" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "分类管理" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "标签管理" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "搜索日志" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "返回公开站" })).toHaveCount(0);
+});
+
+test("admin sees full sidebar menus", async ({ page }) => {
+  await page.goto("/admin/login");
+  await page.getByTestId(adminLoginSelectors.email).fill("admin@knowledgeai.dev");
+  await page.getByTestId(adminLoginSelectors.password).fill("dev");
+  await page.getByTestId(adminLoginSelectors.submit).click();
+
+  await expect(page).toHaveURL(/\/admin\/articles$/);
+  await expect(page.getByRole("link", { name: "文章管理" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "分类管理" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "标签管理" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "搜索日志" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "退出" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "返回公开站" })).toBeVisible();
+});
+
+test("expired access token should refresh before admin write request", async ({ page }) => {
+  await loginAsAdmin(page);
+
+  await page.evaluate(() => {
+    const key = "ka_auth_session";
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return;
+    const session = JSON.parse(raw) as {
+      accessToken: string;
+      accessTokenExpiresAt: number;
+      role: "ADMIN" | "PERSONAL";
+      userId: string;
+    };
+    session.accessToken = "expired-token-for-e2e";
+    session.accessTokenExpiresAt = Date.now() - 60_000;
+    window.localStorage.setItem(key, JSON.stringify(session));
+  });
+
+  await page.goto("/admin/articles/new");
+  await page.getByTestId("article-editor-title").fill(`refresh-e2e-${Date.now()}`);
+  await page.getByTestId("article-editor-markdown").fill("# refresh e2e");
+  await page.getByTestId("article-editor-save").click();
+
+  await expect(page).toHaveURL(/\/admin\/articles\/.+\/edit$/, { timeout: 15_000 });
+  const refreshed = await page.evaluate(() => {
+    const raw = window.localStorage.getItem("ka_auth_session");
+    if (!raw) return null;
+    return JSON.parse(raw) as { accessToken: string };
+  });
+  expect(refreshed?.accessToken).toBeTruthy();
+  expect(refreshed?.accessToken).not.toBe("expired-token-for-e2e");
 });
 
 test("admin login shows error on invalid password", async ({ page }) => {

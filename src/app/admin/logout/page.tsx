@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { clearAuthSession } from "@/lib/auth/client-session";
 
 export default function AdminLogoutPage() {
   useEffect(() => {
@@ -13,6 +14,7 @@ export default function AdminLogoutPage() {
           headers: { "content-type": "application/json" },
         });
       } finally {
+        clearAuthSession();
         if (!cancelled) {
           window.location.replace("/admin/login");
         }
