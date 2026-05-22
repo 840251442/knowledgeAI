@@ -1,8 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 
-function extractSessionCookie(setCookieHeader: string | null) {
+function extractSessionCookie(setCookieHeader: string | null, cookieName: string) {
   if (!setCookieHeader) return null;
-  const match = setCookieHeader.match(/ka_session=([^;]+)/);
+  const match = setCookieHeader.match(new RegExp(`${cookieName}=([^;]+)`));
   return match?.[1] ?? null;
 }
 
@@ -15,13 +15,13 @@ export async function loginAsAdmin(page: Page) {
   });
   expect(loginResponse.ok()).toBeTruthy();
 
-  const cookie = extractSessionCookie(loginResponse.headers()["set-cookie"] ?? null);
+  const cookie = extractSessionCookie(loginResponse.headers()["set-cookie"] ?? null, "ka_admin_session");
   expect(cookie).toBeTruthy();
   if (!cookie) return;
 
   await page.context().addCookies([
     {
-      name: "ka_session",
+      name: "ka_admin_session",
       value: cookie,
       url: "http://127.0.0.1:3000",
     },

@@ -1,10 +1,16 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Button } from "antd";
 
 import { requireAdminUserId } from "@/lib/auth/require-admin";
 import { listAdminArticles } from "@/services/admin-article.service";
 
 export const dynamic = "force-dynamic";
+
+function getStatusLabel(status: string) {
+  if (status === "PUBLISHED") return "已发布";
+  if (status === "DRAFT") return "草稿";
+  return status;
+}
 
 export default async function AdminArticlesPage() {
   const userId = await requireAdminUserId();
@@ -36,9 +42,9 @@ export default async function AdminArticlesPage() {
             <span>草稿/发布状态、编辑与发布操作</span>
           </div>
           <div className="actions">
-            <Link className="btn btnGreen" href="/admin/articles/new">
+            <Button className="btn btnGreen" href="/admin/articles/new" type="primary">
               新建文章
-            </Link>
+            </Button>
           </div>
         </div>
 
@@ -64,7 +70,7 @@ export default async function AdminArticlesPage() {
                     <strong style={{ fontSize: 14 }}>{item.title}</strong>
                     <span className="badge">
                       <span className={item.status === "PUBLISHED" ? "dot dotGreen" : "dot dotWarn"} />
-                      {item.status}
+                      {getStatusLabel(item.status)}
                     </span>
                   </div>
                   <div style={{ marginTop: 8, color: "rgba(255,255,255,.66)", fontSize: 12 }}>
@@ -72,13 +78,13 @@ export default async function AdminArticlesPage() {
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Link className="btn" href={`/admin/articles/${item.id}/edit`}>
+                  <Button className="btn" href={`/admin/articles/${item.id}/edit`}>
                     编辑
-                  </Link>
+                  </Button>
                   {item.status === "PUBLISHED" ? (
-                    <Link className="btn btnPrimary" href={`/articles/${item.slug}`}>
+                    <Button className="btn btnPrimary" href={`/articles/${item.slug}`} type="primary">
                       查看
-                    </Link>
+                    </Button>
                   ) : (
                     <span className="badge">
                       <span className="dot dotWarn" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Button, Input, Select } from "antd";
 
 import { apiRequest } from "./adminApi";
 
@@ -170,7 +171,7 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
         <div className="gridForm">
           <div className="field">
             <div className="label">Name</div>
-            <input
+            <Input
               className="input"
               value={create.name}
               onChange={(e) => setCreate((p) => ({ ...p, name: e.target.value }))}
@@ -179,7 +180,7 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
           </div>
           <div className="field">
             <div className="label">Slug</div>
-            <input
+            <Input
               className="input"
               value={create.slug}
               onChange={(e) => setCreate((p) => ({ ...p, slug: e.target.value }))}
@@ -188,7 +189,7 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
           </div>
           <div className="field">
             <div className="label">Sort</div>
-            <input
+            <Input
               className="input"
               value={create.sortOrder}
               onChange={(e) => setCreate((p) => ({ ...p, sortOrder: e.target.value }))}
@@ -197,21 +198,23 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
           </div>
           <div className="field">
             <div className="label">可见</div>
-            <select
+            <Select
               className="input"
               value={create.isVisible ? "1" : "0"}
-              onChange={(e) => setCreate((p) => ({ ...p, isVisible: e.target.value === "1" }))}
+              onChange={(value) => setCreate((p) => ({ ...p, isVisible: value === "1" }))}
+              options={[
+                { value: "1", label: "是" },
+                { value: "0", label: "否" },
+              ]}
             >
-              <option value="1">是</option>
-              <option value="0">否</option>
-            </select>
+            </Select>
           </div>
         </div>
         <div style={{ padding: "0 16px 16px" }}>
           <div className="label" style={{ marginBottom: 8 }}>
             Description
           </div>
-          <input
+          <Input
             className="input"
             value={create.description}
             onChange={(e) => setCreate((p) => ({ ...p, description: e.target.value }))}
@@ -219,9 +222,9 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
           />
         </div>
         <div className="subActions">
-          <button className="btn btnGreen" type="button" onClick={() => void submitCreate()} disabled={busy}>
+          <Button className="btn btnGreen" onClick={() => void submitCreate()} disabled={busy} type="primary">
             {busy ? "提交中…" : "创建"}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -242,7 +245,7 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
             <div key={c.id} className={cx("tableRow", isEditing && "tableRowActive")}>
               <div className="cell">
                 {view ? (
-                  <input className="input inputSm" value={view.name} onChange={(e) => setDraft((p) => (p ? { ...p, name: e.target.value } : p))} />
+                  <Input className="input inputSm" value={view.name} onChange={(e) => setDraft((p) => (p ? { ...p, name: e.target.value } : p))} />
                 ) : (
                   <div>
                     <strong style={{ fontSize: 13 }}>{c.name}</strong>
@@ -252,28 +255,30 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
               </div>
               <div className="cell">
                 {view ? (
-                  <input className="input inputSm" value={view.slug} onChange={(e) => setDraft((p) => (p ? { ...p, slug: e.target.value } : p))} />
+                  <Input className="input inputSm" value={view.slug} onChange={(e) => setDraft((p) => (p ? { ...p, slug: e.target.value } : p))} />
                 ) : (
                   <span className="mono">{c.slug}</span>
                 )}
               </div>
               <div className="cell">
                 {view ? (
-                  <input className="input inputSm" value={view.sortOrder} onChange={(e) => setDraft((p) => (p ? { ...p, sortOrder: e.target.value } : p))} />
+                  <Input className="input inputSm" value={view.sortOrder} onChange={(e) => setDraft((p) => (p ? { ...p, sortOrder: e.target.value } : p))} />
                 ) : (
                   <span className="mono">{c.sortOrder}</span>
                 )}
               </div>
               <div className="cell">
                 {view ? (
-                  <select
+                  <Select
                     className="input inputSm"
                     value={view.isVisible ? "1" : "0"}
-                    onChange={(e) => setDraft((p) => (p ? { ...p, isVisible: e.target.value === "1" } : p))}
+                    onChange={(value) => setDraft((p) => (p ? { ...p, isVisible: value === "1" } : p))}
+                    options={[
+                      { value: "1", label: "是" },
+                      { value: "0", label: "否" },
+                    ]}
                   >
-                    <option value="1">是</option>
-                    <option value="0">否</option>
-                  </select>
+                  </Select>
                 ) : (
                   <span className="badge">
                     <span className={cx("dot", c.isVisible ? "dotGreen" : "dotWarn")} />
@@ -287,21 +292,21 @@ export default function CategoryManager(props: { initial: CategoryRow[] }) {
               <div className="cell cellActions">
                 {isEditing ? (
                   <>
-                    <button className="btn btnPrimary" type="button" onClick={() => void saveEdit()} disabled={busy}>
+                    <Button className="btn btnPrimary" onClick={() => void saveEdit()} disabled={busy} type="primary">
                       保存
-                    </button>
-                    <button className="btn" type="button" onClick={cancelEdit} disabled={busy}>
+                    </Button>
+                    <Button className="btn" onClick={cancelEdit} disabled={busy}>
                       取消
-                    </button>
+                    </Button>
                   </>
                 ) : (
                   <>
-                    <button className="btn" type="button" onClick={() => beginEdit(c.id)} disabled={busy}>
+                    <Button className="btn" onClick={() => beginEdit(c.id)} disabled={busy}>
                       编辑
-                    </button>
-                    <button className="btn" type="button" onClick={() => void remove(c.id)} disabled={busy}>
+                    </Button>
+                    <Button className="btn" onClick={() => void remove(c.id)} disabled={busy}>
                       删除
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>

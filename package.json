@@ -29,8 +29,10 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/openai": "^0.5.16",
-    "@qdrant/js-client-rest": "^1.15.1",
     "@prisma/client": "^6.19.3",
+    "@qdrant/js-client-rest": "^1.15.1",
+    "@uiw/react-md-editor": "^4.1.1",
+    "antd": "^6.4.3",
     "next": "^16.2.6",
     "openai": "^6.8.1",
     "react": "^19.2.6",

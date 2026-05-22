@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Button } from "antd";
 
 import type { ApiResponse } from "@/types/api";
 
@@ -57,10 +57,6 @@ export default function PersonalAuthPage() {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
 
   function resetFeedback() {
     setMessage("");
@@ -159,18 +155,18 @@ export default function PersonalAuthPage() {
         </div>
 
         <div className="authTabs">
-          <button className={buttonClass(mode === "register")} type="button" onClick={() => { resetFeedback(); setMode("register"); }}>
+          <Button className={buttonClass(mode === "register")} htmlType="button" onClick={() => { resetFeedback(); setMode("register"); }}>
             注册
-          </button>
-          <button className={buttonClass(mode === "login")} type="button" onClick={() => { resetFeedback(); setMode("login"); }}>
+          </Button>
+          <Button className={buttonClass(mode === "login")} htmlType="button" onClick={() => { resetFeedback(); setMode("login"); }}>
             登录
-          </button>
-          <button className={buttonClass(method === "password")} type="button" onClick={() => { resetFeedback(); setMethod("password"); }}>
+          </Button>
+          <Button className={buttonClass(method === "password")} htmlType="button" onClick={() => { resetFeedback(); setMethod("password"); }}>
             邮箱 / 密码
-          </button>
-          <button className={buttonClass(method === "phone")} type="button" onClick={() => { resetFeedback(); setMethod("phone"); }}>
+          </Button>
+          <Button className={buttonClass(method === "phone")} htmlType="button" onClick={() => { resetFeedback(); setMethod("phone"); }}>
             手机 / 验证码
-          </button>
+          </Button>
         </div>
 
         <div className="authSplit">
@@ -227,9 +223,9 @@ export default function PersonalAuthPage() {
                     value={otpCode}
                     onChange={(event) => setOtpCode(event.target.value)}
                   />
-                  <button className="btn" type="button" onClick={() => void requestOtp()} disabled={requestingOtp}>
+                  <Button className="btn" htmlType="button" onClick={() => void requestOtp()} disabled={requestingOtp}>
                     {requestingOtp ? "发送中…" : "获取验证码"}
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -237,9 +233,9 @@ export default function PersonalAuthPage() {
             {message ? <div className="authSuccess">{message}</div> : null}
             {error ? <div className="authError">{error}</div> : null}
 
-            <button className="btn btnPrimary" data-testid="personal-auth-submit" disabled={submitting} type="submit">
+            <Button className="btn btnPrimary" data-testid="personal-auth-submit" disabled={submitting} type="primary" htmlType="submit">
               {submitLabel}
-            </button>
+            </Button>
           </form>
 
           <aside className="authAside">
@@ -248,7 +244,7 @@ export default function PersonalAuthPage() {
             <p>手机号模式支持验证码登录；手机号注册时会校验 OTP，并同时设置密码。</p>
             <p>完成认证后会进入个人文章页，查看自己的草稿、待审核和已发布状态。</p>
             <div className="authHint">
-              还想去后台？<Link className="chipLink" href="/admin/login">管理员登录</Link>
+              还想去后台？<Button className="chipLink" href="/admin/login">管理员登录</Button>
             </div>
           </aside>
         </div>

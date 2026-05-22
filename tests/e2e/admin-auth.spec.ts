@@ -23,6 +23,17 @@ test("admin can log in with seeded credentials", async ({ page }) => {
   await expect(page.getByRole("link", { name: "新建文章" })).toBeVisible();
 });
 
+test("admin session survives visiting public site", async ({ page }) => {
+  await loginAsAdmin(page);
+
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "首页" })).toBeVisible();
+
+  await page.goto("/admin/articles");
+  await expect(page).toHaveURL(/\/admin\/articles$/);
+  await expect(page.getByRole("link", { name: "新建文章" })).toBeVisible();
+});
+
 test("admin login shows error on invalid password", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByTestId(adminLoginSelectors.email).fill("admin@knowledgeai.dev");

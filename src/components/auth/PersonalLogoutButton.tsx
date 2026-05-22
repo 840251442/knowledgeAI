@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "antd";
 
 export default function PersonalLogoutButton(props?: {
   label?: string;
@@ -23,14 +24,8 @@ export default function PersonalLogoutButton(props?: {
   }
 
   return (
-    <button
-      className="chipLink"
-      type="button"
-      onClick={() => void logout()}
-      disabled={loading}
-      data-testid={testId}
-    >
+    <Button className="chipLink" htmlType="button" onClick={() => void logout()} disabled={loading} data-testid={testId}>
       {loading ? "退出中…" : label}
-    </button>
+    </Button>
   );
 }

@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     });
 
     const cookieStore = await cookies();
-    cookieStore.set(getSessionCookieName(), result.token, {
+    cookieStore.set(getSessionCookieName("PERSONAL"), result.token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",

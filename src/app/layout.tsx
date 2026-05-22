@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 
+import "antd/dist/reset.css";
+import "@uiw/react-md-editor/markdown-editor.css";
+import AntdProvider from "@/components/AntdProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,7 +13,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <AntdProvider>{children}</AntdProvider>
+      </body>
     </html>
   );
 }

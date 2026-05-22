@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Button, Input } from "antd";
 
 import { apiRequest } from "./adminApi";
 
@@ -140,7 +141,7 @@ export default function TagManager(props: { initial: TagRow[] }) {
         <div className="gridForm">
           <div className="field">
             <div className="label">Name</div>
-            <input
+            <Input
               className="input"
               value={create.name}
               onChange={(e) => setCreate((p) => ({ ...p, name: e.target.value }))}
@@ -149,7 +150,7 @@ export default function TagManager(props: { initial: TagRow[] }) {
           </div>
           <div className="field">
             <div className="label">Slug</div>
-            <input
+            <Input
               className="input"
               value={create.slug}
               onChange={(e) => setCreate((p) => ({ ...p, slug: e.target.value }))}
@@ -158,9 +159,9 @@ export default function TagManager(props: { initial: TagRow[] }) {
           </div>
         </div>
         <div className="subActions">
-          <button className="btn btnGreen" type="button" onClick={() => void submitCreate()} disabled={busy}>
+          <Button className="btn btnGreen" onClick={() => void submitCreate()} disabled={busy} type="primary">
             {busy ? "提交中…" : "创建"}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -179,14 +180,14 @@ export default function TagManager(props: { initial: TagRow[] }) {
             <div key={t.id} className={cx("tableRow", isEditing && "tableRowActive")}>
               <div className="cell">
                 {view ? (
-                  <input className="input inputSm" value={view.name} onChange={(e) => setDraft((p) => (p ? { ...p, name: e.target.value } : p))} />
+                  <Input className="input inputSm" value={view.name} onChange={(e) => setDraft((p) => (p ? { ...p, name: e.target.value } : p))} />
                 ) : (
                   <strong style={{ fontSize: 13 }}>{t.name}</strong>
                 )}
               </div>
               <div className="cell">
                 {view ? (
-                  <input className="input inputSm" value={view.slug} onChange={(e) => setDraft((p) => (p ? { ...p, slug: e.target.value } : p))} />
+                  <Input className="input inputSm" value={view.slug} onChange={(e) => setDraft((p) => (p ? { ...p, slug: e.target.value } : p))} />
                 ) : (
                   <span className="mono">{t.slug}</span>
                 )}
@@ -197,21 +198,21 @@ export default function TagManager(props: { initial: TagRow[] }) {
               <div className="cell cellActions">
                 {isEditing ? (
                   <>
-                    <button className="btn btnPrimary" type="button" onClick={() => void saveEdit()} disabled={busy}>
+                    <Button className="btn btnPrimary" onClick={() => void saveEdit()} disabled={busy} type="primary">
                       保存
-                    </button>
-                    <button className="btn" type="button" onClick={cancelEdit} disabled={busy}>
+                    </Button>
+                    <Button className="btn" onClick={cancelEdit} disabled={busy}>
                       取消
-                    </button>
+                    </Button>
                   </>
                 ) : (
                   <>
-                    <button className="btn" type="button" onClick={() => beginEdit(t.id)} disabled={busy}>
+                    <Button className="btn" onClick={() => beginEdit(t.id)} disabled={busy}>
                       编辑
-                    </button>
-                    <button className="btn" type="button" onClick={() => void remove(t.id)} disabled={busy}>
+                    </Button>
+                    <Button className="btn" onClick={() => void remove(t.id)} disabled={busy}>
                       删除
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>

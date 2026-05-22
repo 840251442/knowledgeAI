@@ -2,7 +2,9 @@ import crypto from "node:crypto";
 
 export type AuthRole = "ADMIN" | "PERSONAL";
 
-const COOKIE_NAME = "ka_session";
+const LEGACY_COOKIE_NAME = "ka_session";
+const ADMIN_COOKIE_NAME = "ka_admin_session";
+const PERSONAL_COOKIE_NAME = "ka_personal_session";
 
 type SessionPayload = {
   userId: string;
@@ -34,8 +36,12 @@ function sign(data: string, secret: Buffer) {
   return crypto.createHmac("sha256", secret).update(data).digest();
 }
 
-export function getSessionCookieName() {
-  return COOKIE_NAME;
+export function getSessionCookieName(role: AuthRole) {
+  return role === "ADMIN" ? ADMIN_COOKIE_NAME : PERSONAL_COOKIE_NAME;
+}
+
+export function getLegacySessionCookieName() {
+  return LEGACY_COOKIE_NAME;
 }
 
 export function createSessionToken(payload: SessionPayload) {

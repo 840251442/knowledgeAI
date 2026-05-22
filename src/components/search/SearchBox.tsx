@@ -1,3 +1,5 @@
+import { Button } from "antd";
+
 export default function SearchBox(props: { defaultValue: string }) {
   return (
     <form className="heroRow" action="/search" data-testid="search-page-form">
@@ -8,9 +10,9 @@ export default function SearchBox(props: { defaultValue: string }) {
         placeholder="例如：Redis 缓存一致性怎么做？"
         data-testid="search-page-input"
       />
-      <button className="btn btnPrimary" type="submit">
+      <Button className="btn btnPrimary" type="primary" htmlType="submit">
         搜索
-      </button>
+      </Button>
     </form>
   );
 }

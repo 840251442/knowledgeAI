@@ -1,17 +1,37 @@
-import { redirect } from "next/navigation";
+"use client";
 
-import { getSessionCookieName } from "@/lib/auth/session";
+import { useEffect } from "react";
 
-export default async function AdminLogoutPage() {
-  const cookieStore = await (await import("next/headers")).cookies();
-  cookieStore.set(getSessionCookieName(), "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
+export default function AdminLogoutPage() {
+  useEffect(() => {
+    let cancelled = false;
 
-  redirect("/admin/login");
+    async function logout() {
+      try {
+        await fetch("/api/admin/logout", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+        });
+      } finally {
+        if (!cancelled) {
+          window.location.replace("/admin/login");
+        }
+      }
+    }
+
+    void logout();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <main className="adminLoginPage">
+      <div className="adminLoginCard">
+        <h1>正在退出…</h1>
+        <p>请稍候，正在清理登录状态并跳转到登录页。</p>
+      </div>
+    </main>
+  );
 }
 

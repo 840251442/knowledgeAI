@@ -24,7 +24,7 @@ export default async function SearchPage({
 
       <div className="twoCol">
         <div>
-          <div className="list" style={{ marginTop: 0 }}>
+          <div className="list listNoTopMargin">
             <SearchResults query={q} result={result} />
           </div>
         </div>

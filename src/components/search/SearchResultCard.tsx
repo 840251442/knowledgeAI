@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Button } from "antd";
 
 import type { SearchResultItem } from "@/types/search";
 
@@ -16,19 +16,16 @@ export default function SearchResultCard(props: {
         <strong data-testid="search-result-title">
           <HighlightedText query={props.query} testId="search-highlight" text={props.item.title} />
         </strong>
-        <div
-          data-testid="search-result-excerpt"
-          style={{ color: "rgba(255,255,255,.72)", fontSize: 13, lineHeight: 1.4 }}
-        >
+        <div data-testid="search-result-excerpt" className="resultExcerpt">
           <HighlightedText query={props.query} testId="search-highlight" text={excerpt} />
         </div>
         <div className="resultMeta">
           {props.item.category.name} · 分数 {props.item.score.toFixed(2)}
         </div>
       </div>
-      <Link className="score" href={`/articles/${props.item.slug}`}>
+      <Button className="score" href={`/articles/${props.item.slug}`}>
         OPEN
-      </Link>
+      </Button>
     </div>
   );
 }

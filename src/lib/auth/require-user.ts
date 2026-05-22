@@ -2,19 +2,25 @@ import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/db/prisma";
 
-import { getSessionCookieName, type AuthRole, verifySessionToken } from "./session";
+import {
+  getLegacySessionCookieName,
+  getSessionCookieName,
+  type AuthRole,
+  verifySessionToken,
+} from "./session";
 
 export type AuthenticatedUser =
   | { id: string; role: "ADMIN"; email: string; username: string; isActive: boolean }
   | { id: string; role: "PERSONAL"; email: string | null; phone: string | null; isActive: boolean };
 
-export async function requireUser(): Promise<AuthenticatedUser | null> {
+export async function requireUser(role: AuthRole): Promise<AuthenticatedUser | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(getSessionCookieName())?.value;
+
+  const token = cookieStore.get(getSessionCookieName(role))?.value ?? cookieStore.get(getLegacySessionCookieName())?.value;
   if (!token) return null;
 
   const session = verifySessionToken(token);
-  if (!session) return null;
+  if (!session || session.role !== role) return null;
 
   return loadUserBySession(session.userId, session.role);
 }

@@ -1,6 +1,12 @@
 "use client";
 
+import MDEditor from "@uiw/react-md-editor";
+import ReactMarkdown from "react-markdown";
 import { useMemo, useState } from "react";
+import { Button, Input, Select, message } from "antd";
+import remarkGfm from "remark-gfm";
+
+import { slugifyHeading } from "@/lib/markdown/slug";
 
 type CategoryOption = { id: string; name: string; slug: string };
 type TagOption = { id: string; name: string; slug: string };
@@ -33,6 +39,16 @@ function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
+function getStatusLabel(status: string) {
+  if (status === "PUBLISHED") return "已发布";
+  if (status === "DRAFT") return "草稿";
+  return status;
+}
+
+function getSlugLabel(mode: EditorMode) {
+  return mode === "create" ? "地址" : "Slug";
+}
+
 export default function ArticleEditor(props: {
   mode: EditorMode;
   categories: CategoryOption[];
@@ -53,9 +69,14 @@ export default function ArticleEditor(props: {
   const [aiState, setAiState] = useState<AiDraftState>("idle");
   const [aiError, setAiError] = useState("");
 
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const generatedSlug = useMemo(() => slugifyHeading(title) || "article", [title]);
+  const effectiveSlug = props.mode === "create" ? generatedSlug : slug;
+
   const canSave = useMemo(() => {
-    return title.trim() && slug.trim() && contentMarkdown.trim() && categoryId;
-  }, [title, slug, contentMarkdown, categoryId]);
+    return title.trim() && contentMarkdown.trim() && categoryId && (props.mode === "create" || slug.trim());
+  }, [title, slug, contentMarkdown, categoryId, props.mode]);
 
   const selectedTags = useMemo(() => new Set(tagIds), [tagIds]);
 
@@ -164,7 +185,7 @@ export default function ArticleEditor(props: {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             title,
-            slug,
+            slug: effectiveSlug,
             summary: summary.trim() ? summary : null,
             contentMarkdown,
             categoryId,
@@ -188,7 +209,7 @@ export default function ArticleEditor(props: {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           title,
-          slug,
+          slug: effectiveSlug,
           summary: summary.trim() ? summary : null,
           contentMarkdown,
           categoryId,
@@ -219,7 +240,7 @@ export default function ArticleEditor(props: {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             title,
-            slug,
+            slug: effectiveSlug,
             summary: summary.trim() ? summary : null,
             contentMarkdown,
             categoryId,
@@ -244,7 +265,10 @@ export default function ArticleEditor(props: {
           return;
         }
 
-        window.location.href = `/admin/articles/${id}/edit`;
+        messageApi.success("发布成功");
+        setTimeout(() => {
+          window.location.href = `/admin/articles/${id}/edit`;
+        }, 500);
         return;
       }
 
@@ -259,6 +283,7 @@ export default function ArticleEditor(props: {
         return;
       }
       setStatus("PUBLISHED");
+      messageApi.success("发布成功");
       setState({ type: "success", message: "已发布" });
       setTimeout(() => setState({ type: "idle" }), 900);
     } catch {
@@ -308,11 +333,13 @@ export default function ArticleEditor(props: {
     }
   }
 
-  const statusDotClass =
-    status === "PUBLISHED" ? "dotGreen" : status === "DRAFT" ? "dotWarn" : "dotCyan";
+  const statusDotClass = status === "PUBLISHED" ? "dotGreen" : status === "DRAFT" ? "dotWarn" : "dotCyan";
+
+  const showSlugField = props.mode === "edit";
 
   return (
     <div className="panel" data-testid="article-editor">
+      {contextHolder}
       <div className="panelHeader">
         <div className="panelTitle">
           <strong>{props.mode === "create" ? "新建文章" : "编辑文章"}</strong>
@@ -321,49 +348,46 @@ export default function ArticleEditor(props: {
         <div className="actions">
           <span className="badge">
             <span className={cx("dot", statusDotClass)} />
-            状态：{status}
+            状态：{getStatusLabel(status)}
           </span>
-          <button
+          <Button
             data-testid="article-editor-ai-entry"
             className={cx("btn")}
-            type="button"
             onClick={() => setShowAiPanel((prev) => !prev)}
             disabled={state.type !== "idle" && state.type !== "success"}
           >
             AI 创作
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="article-editor-save"
             className={cx("btn", "btnGhost")}
-            type="button"
             onClick={() => void saveDraft()}
             disabled={!canSave || state.type !== "idle"}
           >
             保存草稿
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="article-editor-publish"
             className={cx("btn", "btnPrimary")}
-            type="button"
+            type="primary"
             onClick={() => void publish()}
             disabled={!canSave || (state.type !== "idle" && state.type !== "success")}
           >
             {state.type === "publishing" ? "发布中…" : "发布"}
-          </button>
-          {props.mode === "edit" ? (
+          </Button>
+          {props.mode === "edit" && status === "PUBLISHED" ? (
             <>
-              <button
+              <Button
                 data-testid="article-editor-unpublish"
                 className={cx("btn")}
-                type="button"
                 onClick={() => void unpublish()}
                 disabled={state.type !== "idle"}
               >
                 {state.type === "unpublishing" ? "下线中…" : "下线"}
-              </button>
-              <button className={cx("btn")} type="button" onClick={() => void remove()} disabled={state.type !== "idle"}>
+              </Button>
+              <Button className={cx("btn")} onClick={() => void remove()} disabled={state.type !== "idle"}>
                 {state.type === "deleting" ? "删除中…" : "删除"}
-              </button>
+              </Button>
             </>
           ) : null}
         </div>
@@ -375,7 +399,7 @@ export default function ArticleEditor(props: {
         <div className="aiPanel" data-testid="article-editor-ai-panel">
           <div className="label">AI 关键词创作</div>
           <div className="subMuted">输入关键词后生成正文草稿。仅在点击“插入正文”后写入编辑区。</div>
-          <input
+          <Input
             data-testid="article-editor-ai-keyword"
             className="input"
             value={aiKeyword}
@@ -383,27 +407,26 @@ export default function ArticleEditor(props: {
             placeholder="例如：Redis 缓存一致性"
           />
           <div className="aiActions">
-            <button
+            <Button
               data-testid="article-editor-ai-generate"
               className={cx("btn", "btnPrimary")}
-              type="button"
+              type="primary"
               disabled={aiState === "generating"}
               onClick={() => void generateWithAi()}
             >
               {aiState === "generating" ? "生成中…" : "开始生成"}
-            </button>
-            <button
+            </Button>
+            <Button
               data-testid="article-editor-ai-insert"
               className={cx("btn")}
-              type="button"
               onClick={insertAiDraft}
               disabled={!aiPreview.trim()}
             >
               插入正文
-            </button>
-            <button data-testid="article-editor-ai-discard" className={cx("btn")} type="button" onClick={discardAiDraft}>
+            </Button>
+            <Button data-testid="article-editor-ai-discard" className={cx("btn")} onClick={discardAiDraft}>
               放弃
-            </button>
+            </Button>
           </div>
           {aiError ? <div className="errorBox" style={{ margin: 0 }}>{aiError}</div> : null}
           <pre data-testid="article-editor-ai-preview" className="aiPreview">
@@ -412,31 +435,25 @@ export default function ArticleEditor(props: {
         </div>
       ) : null}
 
-      <div className="fieldRow">
+      <div className={props.mode === "create" ? "editorMetaGrid editorMetaGridCreate" : "editorMetaGrid editorMetaGridEdit"}>
         <div className="field">
           <div className="label">标题</div>
-          <input
+          <Input
             data-testid="article-editor-title"
             className="input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
-        <div className="field">
-          <div className="label">Slug</div>
-          <input
-            data-testid="article-editor-slug"
-            className="input"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="fieldRow" style={{ paddingTop: 0 }}>
+        {showSlugField ? (
+          <div className="field">
+            <div className="label">{getSlugLabel(props.mode)}</div>
+            <Input data-testid="article-editor-slug" className="input" value={slug} onChange={(e) => setSlug(e.target.value)} />
+          </div>
+        ) : null}
         <div className="field">
           <div className="label">摘要</div>
-          <input
+          <Input
             data-testid="article-editor-summary"
             className="input"
             value={summary}
@@ -445,21 +462,15 @@ export default function ArticleEditor(props: {
         </div>
         <div className="field">
           <div className="label">分类</div>
-          <select
+          <Select
             data-testid="article-editor-category"
             className="input"
             value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
+            onChange={(value) => setCategoryId(value)}
+            options={props.categories.map((c) => ({ value: c.id, label: c.name }))}
+            placeholder="请选择分类"
           >
-            <option value="" disabled>
-              请选择分类
-            </option>
-            {props.categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -488,11 +499,15 @@ export default function ArticleEditor(props: {
       <div className="editorSplit">
         <div className="pane">
           <h4>Markdown 编辑</h4>
-          <textarea
-            data-testid="article-editor-markdown"
-            className="textarea"
+          <MDEditor
             value={contentMarkdown}
-            onChange={(e) => setContentMarkdown(e.target.value)}
+            onChange={(value) => setContentMarkdown(value ?? "")}
+            preview="edit"
+            visibleDragbar={false}
+            height={420}
+            className="markdownEditor"
+            data-color-mode="dark"
+            renderTextarea={(props) => <textarea {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} data-testid="article-editor-markdown" />}
           />
         </div>
         <div className="pane">
@@ -513,22 +528,40 @@ export default function ArticleEditor(props: {
               {slug ? `/${slug}` : "（未设置 slug）"}
             </div>
           </div>
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid rgba(255,255,255,.12)",
-              background: "rgba(0,0,0,.18)",
-              borderRadius: 16,
-              padding: 12,
-              color: "rgba(255,255,255,.86)",
-              fontFamily: "var(--mono)",
-              fontSize: 12,
-              whiteSpace: "pre-wrap",
-              lineHeight: 1.55,
-              minHeight: 160,
-            }}
-          >
-            {contentMarkdown || "（空内容）"}
+          <div className="markdown markdownPreview">
+            {contentMarkdown.trim() ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: (props) => {
+                    const text = String(props.children ?? "");
+                    return <h1>{text}</h1>;
+                  },
+                  h2: (props) => {
+                    const text = String(props.children ?? "");
+                    return <h2>{text}</h2>;
+                  },
+                  h3: (props) => {
+                    const text = String(props.children ?? "");
+                    return <h3>{text}</h3>;
+                  },
+                  code: (props) => {
+                    const className = typeof props.className === "string" ? props.className : "";
+                    const inline = Boolean((props as unknown as { inline?: boolean }).inline);
+                    if (inline) return <code>{props.children}</code>;
+                    return (
+                      <pre className="code">
+                        <code className={className}>{props.children}</code>
+                      </pre>
+                    );
+                  },
+                }}
+              >
+                {contentMarkdown}
+              </ReactMarkdown>
+            ) : (
+              <div className="markdownEmpty">（空内容）</div>
+            )}
           </div>
         </div>
       </div>
@@ -536,12 +569,12 @@ export default function ArticleEditor(props: {
       <div className="statusLine">
         <span className="badge">
           <span className={cx("dot", "dotBrand")} />
-          索引：PENDING
+          索引：待处理
         </span>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className={cx("btn", "btnGreen")} type="button" disabled>
+          <Button className={cx("btn", "btnGreen")} type="primary" disabled>
             重建索引
-          </button>
+          </Button>
         </div>
       </div>
     </div>

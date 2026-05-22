@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Button, Select } from "antd";
 
 import { apiRequest } from "./adminApi";
 
@@ -164,12 +165,12 @@ export default function SearchLogsViewer() {
 
       <div className="pager">
         <div className="pagerLeft">
-          <button className="btn" type="button" disabled={busy || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+          <Button className="btn" disabled={busy || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
             上一页
-          </button>
-          <button className="btn" type="button" disabled={busy || page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+          </Button>
+          <Button className="btn" disabled={busy || page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
             下一页
-          </button>
+          </Button>
           <span className="subMuted">
             第 {page} / {totalPages} 页
           </span>
@@ -177,21 +178,23 @@ export default function SearchLogsViewer() {
 
         <div className="pagerRight">
           <span className="subMuted">每页</span>
-          <select
+          <Select
             className="input inputSm"
             value={String(pageSize)}
-            onChange={(e) => {
-              const next = Number.parseInt(e.target.value, 10);
+            onChange={(value) => {
+              const next = Number.parseInt(String(value), 10);
               setPageSize(Number.isFinite(next) ? next : 20);
               setPage(1);
             }}
             disabled={busy}
+            options={[
+              { value: "10", label: "10" },
+              { value: "20", label: "20" },
+              { value: "50", label: "50" },
+              { value: "100", label: "100" },
+            ]}
           >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
+          </Select>
         </div>
       </div>
     </div>

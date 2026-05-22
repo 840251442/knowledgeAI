@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "antd";
 
 import { listPublishedArticles } from "@/services/article.service";
 
@@ -26,13 +27,13 @@ export default async function PublicArticlesPage({
         <p className="heroSub">按时间、分类与标签浏览公开内容。</p>
         <form className="heroRow" action="/search">
           <input className="input" name="q" placeholder="搜索文章…" />
-          <button className="btn btnPrimary" type="submit">
+          <Button className="btn btnPrimary" type="primary" htmlType="submit">
             搜索
-          </button>
+          </Button>
         </form>
       </div>
 
-      <div style={{ padding: 16 }}>
+      <div className="sectionPad">
         {!result ? (
           <div className="result">
             <div>
@@ -42,12 +43,12 @@ export default async function PublicArticlesPage({
             <div className="score">DB</div>
           </div>
         ) : (
-          <div className="list" style={{ marginTop: 0 }}>
+          <div className="list listNoTopMargin">
             {result.items.map((a) => (
               <div key={a.id} className="result">
                 <div>
                   <strong>{a.title}</strong>
-                  <div style={{ color: "rgba(255,255,255,.72)", fontSize: 13, lineHeight: 1.4 }}>
+                  <div className="resultExcerpt">
                     {a.summary ?? "（无摘要）"}
                   </div>
                   <div className="resultMeta">

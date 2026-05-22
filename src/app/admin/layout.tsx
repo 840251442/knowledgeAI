@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import "./admin.css";
 
@@ -6,13 +9,15 @@ function NavLink({
   href,
   label,
   pill,
+  active,
 }: {
   href: string;
   label: string;
   pill: string;
+  active: boolean;
 }) {
   return (
-    <Link className="navLink" href={href} prefetch={false}>
+    <Link className={active ? "navLink navLinkActive" : "navLink"} href={href} prefetch={false}>
       <span>{label}</span>
       <span className="pill">{pill}</span>
     </Link>
@@ -20,6 +25,8 @@ function NavLink({
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <div className="adminApp">
       <aside className="sidebar">
@@ -32,14 +39,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <nav className="nav">
-          <NavLink href="/admin/articles" label="文章管理" pill="Admin" />
-          <NavLink href="/admin/categories" label="分类管理" pill="Tax" />
-          <NavLink href="/admin/tags" label="标签管理" pill="Tag" />
-          <NavLink href="/admin/search-logs" label="搜索日志" pill="Logs" />
-          <NavLink href="/admin/logout" label="退出" pill="Out" />
+          <NavLink href="/admin/articles" label="文章管理" pill="文章" active={pathname.startsWith("/admin/articles")} />
+          <NavLink href="/admin/categories" label="分类管理" pill="分类" active={pathname.startsWith("/admin/categories")} />
+          <NavLink href="/admin/tags" label="标签管理" pill="标签" active={pathname.startsWith("/admin/tags")} />
+          <NavLink href="/admin/search-logs" label="搜索日志" pill="日志" active={pathname.startsWith("/admin/search-logs")} />
+          <NavLink href="/admin/logout" label="退出" pill="退出" active={pathname.startsWith("/admin/logout")} />
           <Link className="navLink" href="/">
             <span>返回公开站</span>
-            <span className="pill">Public</span>
+            <span className="pill">公开站</span>
           </Link>
         </nav>
       </aside>

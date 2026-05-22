@@ -10,7 +10,7 @@
 
 ## 使用方式
 
-1. 选择你要推进的方向（前端/后端/数据库/向量检索）
+1. 选择你要推进的方向（前端/后端/UI-UX/数据库/向量检索）
 2. 复制对应 Prompt 全文
 3. 默认继承上面的项目级规则
 4. 在 Prompt 末尾追加两行即可开始推进：
@@ -20,6 +20,7 @@
 ## Prompt 列表
 
 - [前端 Prompt](./frontend.md)
+- [UI/UX 专家 Prompt](./ui-ux-engineer.md)
 - [后端 Prompt](./backend.md)
 - [数据库 Prompt](./database.md)
 - [向量数据库与语义检索 Prompt](./vector-search.md)

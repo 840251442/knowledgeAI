@@ -3,404 +3,175 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>KnowledgeAI 设计稿</title>
+    <title>KnowledgeAI - Cyber Draft V3</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="app">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <h1>KnowledgeAI 设计稿</h1>
-            <p>高保真 · 彩色 · 可预览</p>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="layout">
+      <header class="header">
+        <div class="logo-wrap">
+          <span class="logo-core"></span>
+          <div class="logo-text">
+            <strong>KnowledgeAI</strong>
+            <span>Neural Knowledge Console</span>
           </div>
         </div>
 
-        <div class="sectionTitle">页面</div>
-        <nav class="nav" id="nav">
-          <a href="#home" data-page="home" class="active"><span>公开首页</span><span class="pill">Public</span></a>
-          <a href="#search" data-page="search"><span>搜索结果</span><span class="pill">Hybrid</span></a>
-          <a href="#article" data-page="article"><span>文章详情</span><span class="pill">SEO</span></a>
-          <a href="#admin" data-page="admin"><span>后台编辑</span><span class="pill">Admin</span></a>
-        </nav>
-
-        <div class="sectionTitle">设计系统</div>
-        <div class="tokens">
-          <div class="row"><span class="chip">背景</span><span class="chip">深色渐变</span></div>
-          <div class="row"><span class="chip">主色</span><span class="chip">紫 + 青</span></div>
-          <div class="row"><span class="chip">强调</span><span class="chip">绿 / 橙</span></div>
-          <div class="row"><span class="chip">圆角</span><span class="chip">16 / 22</span></div>
+        <div class="header-actions">
+          <button class="view-btn active" data-view="public">公开站</button>
+          <button class="view-btn" data-view="admin">管理后台</button>
+          <button class="login-btn" id="openAuth">登录</button>
         </div>
-      </aside>
+      </header>
 
-      <main class="main">
-        <div class="topbar">
-          <div class="hint">切换左侧页面，查看彩色高保真设计稿</div>
-          <div class="kbd">提示：用 #home / #search / #article / #admin</div>
-        </div>
+      <main>
+        <section class="scene active" id="public-scene">
+          <section class="hero">
+            <p class="tiny">HYBRID SEARCH PROTOCOL</p>
+            <h1>让搜索结果先于思考一步命中</h1>
+            <p class="lead">以语义召回为核心，关键词做精确校正。页面只保留高价值信息流。</p>
 
-        <div class="canvas">
-          <section class="page active" id="page-home" data-page="home">
-            <div class="frame">
-              <div class="frameHeader">
-                <div class="title">
-                  <strong>KnowledgeAI</strong>
-                  <span>公开知识库</span>
-                </div>
-                <div class="actions">
-                  <button class="btn ghost">分类</button>
-                  <button class="btn ghost">标签</button>
-                  <button class="btn primary">关于</button>
-                </div>
-              </div>
+            <div class="search-line">
+              <input type="text" value="Redis 缓存一致性如何实现自动化治理" aria-label="公开站搜索" />
+              <button>立即搜索</button>
+            </div>
 
-              <div class="hero">
-                <h2>用自然语言更快找到知识</h2>
-                <p>面向公开访问的个人知识库：支持关键词与语义混合检索、文章沉淀与 SEO。</p>
-                <div class="heroRow">
-                  <input class="input" value="Redis 缓存一致性怎么做？" aria-label="搜索" />
-                  <button class="btn green">语义搜索</button>
-                  <button class="btn">关键词</button>
-                </div>
-                <div class="tags">
-                  <span class="tag brand">#Redis</span>
-                  <span class="tag cyan">#MySQL</span>
-                  <span class="tag green">#性能</span>
-                  <span class="tag warn">#架构</span>
-                  <span class="tag">#React</span>
-                </div>
-              </div>
-
-              <div class="grid2">
-                <div class="card">
-                  <h3>最近更新</h3>
-                  <p>按发布时间展示最新文章，适合公开知识库的内容流。</p>
-                  <div class="list">
-                    <div class="result">
-                      <div>
-                        <strong>Redis 缓存策略实践指南</strong>
-                        <div class="meta">#Redis · #缓存 · 更新于 2026-05-19</div>
-                      </div>
-                      <div class="score">HOT</div>
-                    </div>
-                    <div class="result">
-                      <div>
-                        <strong>MySQL 索引设计：从原则到实战</strong>
-                        <div class="meta">#MySQL · #索引 · 更新于 2026-05-17</div>
-                      </div>
-                      <div class="score">NEW</div>
-                    </div>
-                    <div class="result">
-                      <div>
-                        <strong>Next.js 全栈路由与数据获取模式</strong>
-                        <div class="meta">#Next.js · #全栈 · 更新于 2026-05-15</div>
-                      </div>
-                      <div class="score">OK</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="card">
-                  <h3>推荐专题</h3>
-                  <p>用分类把内容聚合成主题入口，提高浏览效率。</p>
-                  <div class="grid3">
-                    <div class="card">
-                      <h3>后端</h3>
-                      <p>API 设计、缓存、性能、工程化</p>
-                      <div class="tags">
-                        <span class="tag green">#性能</span>
-                        <span class="tag brand">#缓存</span>
-                      </div>
-                    </div>
-                    <div class="card">
-                      <h3>数据库</h3>
-                      <p>索引、事务、SQL 优化</p>
-                      <div class="tags">
-                        <span class="tag cyan">#MySQL</span>
-                        <span class="tag warn">#索引</span>
-                      </div>
-                    </div>
-                    <div class="card">
-                      <h3>前端</h3>
-                      <p>React、Next.js、性能优化</p>
-                      <div class="tags">
-                        <span class="tag">#React</span>
-                        <span class="tag cyan">#Next.js</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div class="hot-tags" aria-label="热门标签">
+              <span class="hot-title">热门标签</span>
+              <button class="tag">#Redis</button>
+              <button class="tag">#RAG</button>
+              <button class="tag">#向量索引</button>
+              <button class="tag">#检索质量</button>
             </div>
           </section>
 
-          <section class="page" id="page-search" data-page="search">
-            <div class="frame">
-              <div class="frameHeader">
-                <div class="title">
-                  <strong>搜索</strong>
-                  <span>混合检索（关键词 + 语义）</span>
-                </div>
-                <div class="actions">
-                  <span class="badge"><span class="dot cyan"></span>HYBRID</span>
-                  <button class="btn">筛选</button>
-                  <button class="btn primary">导出</button>
-                </div>
-              </div>
+          <section class="cards">
+            <article class="card">
+              <h3>Redis 缓存策略实践指南</h3>
+              <p>穿透、击穿、雪崩到一致性修复链路，完整闭环。</p>
+              <footer><span>数据库</span><span>12 min</span></footer>
+            </article>
+            <article class="card">
+              <h3>MySQL 索引与回归验证</h3>
+              <p>EXPLAIN 基线 + SQL 性能回归，一套可重复流程。</p>
+              <footer><span>后端</span><span>9 min</span></footer>
+            </article>
+            <article class="card">
+              <h3>Next.js 搜索体验细节</h3>
+              <p>输入反馈、状态切换、结果排布的感知优化细则。</p>
+              <footer><span>前端</span><span>7 min</span></footer>
+            </article>
+          </section>
+        </section>
 
-              <div class="hero">
-                <div class="heroRow">
-                  <input class="input" value="如何设计 Redis 缓存策略" aria-label="搜索" />
-                  <button class="btn green">语义优先</button>
-                  <button class="btn">关键词优先</button>
-                </div>
-                <div class="tags">
-                  <span class="tag brand">分类：数据库</span>
-                  <span class="tag cyan">标签：#Redis</span>
-                  <span class="tag">时间：不限</span>
-                </div>
-              </div>
+        <section class="scene" id="admin-scene">
+          <section class="admin-banner">
+            <p class="tiny">ADMIN WORKBENCH</p>
+            <h2>内容控制与审核中枢</h2>
+            <p>保持后台效率布局，视觉系统与公开站一致。</p>
+          </section>
 
-              <div class="twoCol">
-                <div>
-                  <div class="list">
-                    <div class="result">
-                      <div>
-                        <strong>Redis 缓存策略实践指南</strong>
-                        <p>命中片段：…缓存穿透 / 击穿 / 雪崩…一致性策略…失效与回源…</p>
-                        <div class="meta">#Redis #缓存 #一致性 · 更新于 2026-05-19</div>
-                      </div>
-                      <div class="score">0.92</div>
-                    </div>
-                    <div class="result">
-                      <div>
-                        <strong>MySQL + Redis：读写一致性的工程化方案</strong>
-                        <p>命中片段：…双写策略…消息队列补偿…幂等…监控告警…</p>
-                        <div class="meta">#MySQL #Redis #工程化 · 更新于 2026-05-17</div>
-                      </div>
-                      <div class="score">0.86</div>
-                    </div>
-                    <div class="result">
-                      <div>
-                        <strong>缓存 Key 设计与 TTL 策略</strong>
-                        <p>命中片段：…分层缓存…热点保护…按业务维度设置 TTL…</p>
-                        <div class="meta">#Redis #性能 · 更新于 2026-05-15</div>
-                      </div>
-                      <div class="score">0.79</div>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div class="card">
-                    <h3>筛选条件</h3>
-                    <p>保持结果结构不变，便于前端并行开发。</p>
-                    <div class="tags">
-                      <span class="tag brand">分类</span>
-                      <span class="tag">标签</span>
-                      <span class="tag cyan">排序：相关度</span>
-                    </div>
-                  </div>
-                  <div class="card" style="margin-top:14px">
-                    <h3>查询统计</h3>
-                    <p>用于后台搜索分析：热门词、无结果词、平均耗时。</p>
-                    <div class="list">
-                      <div class="result">
-                        <div>
-                          <strong>本次耗时</strong>
-                          <div class="meta">Redis 命中缓存：否</div>
-                        </div>
-                        <div class="score">128ms</div>
-                      </div>
-                      <div class="result">
-                        <div>
-                          <strong>结果数量</strong>
-                          <div class="meta">混合召回 + 融合排序</div>
-                        </div>
-                        <div class="score">23</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          <section class="admin-grid">
+            <aside class="side">
+              <h4>模块</h4>
+              <ul>
+                <li class="active">文章管理</li>
+                <li>审核队列</li>
+                <li>分类与标签</li>
+                <li>搜索日志</li>
+              </ul>
+            </aside>
+
+            <div class="panel">
+              <div class="toolbar">
+                <input type="text" value="搜索文章标题" aria-label="后台搜索" />
+                <button>新建文章</button>
+              </div>
+              <div class="table">
+                <div class="tr head"><span>标题</span><span>状态</span><span>更新时间</span></div>
+                <div class="tr"><span>Redis 缓存策略实践指南</span><span class="pill ok">已发布</span><span>2026-05-21</span></div>
+                <div class="tr"><span>向量检索召回调优</span><span class="pill warn">审核中</span><span>2026-05-20</span></div>
+                <div class="tr"><span>Next.js 搜索体验细节</span><span class="pill draft">草稿</span><span>2026-05-19</span></div>
               </div>
             </div>
           </section>
-
-          <section class="page" id="page-article" data-page="article">
-            <div class="frame">
-              <div class="frameHeader">
-                <div class="title">
-                  <strong>文章详情</strong>
-                  <span>Markdown 渲染 + ToC + 相关推荐</span>
-                </div>
-                <div class="actions">
-                  <button class="btn">分享</button>
-                  <button class="btn primary">复制链接</button>
-                </div>
-              </div>
-
-              <div class="articleTitle">
-                <h2>Redis 缓存策略实践指南</h2>
-                <div class="sub">
-                  <span>分类：数据库</span>
-                  <span>标签：#Redis #缓存 #一致性</span>
-                  <span>更新时间：2026-05-19</span>
-                  <span>阅读：12,403</span>
-                </div>
-              </div>
-
-              <div class="twoCol">
-                <div class="card" style="padding:0">
-                  <div class="markdown">
-                    <h3>1. 问题背景</h3>
-                    <p>缓存是为了降低延迟与削峰，但带来一致性、穿透、击穿、雪崩等问题。首版知识库强调可落地的工程实践与可检索性。</p>
-                    <h3>2. 核心策略</h3>
-                    <p>常用策略包括：Cache Aside、Read/Write Through、双写与消息补偿、TTL 分层与热点保护。</p>
-                    <div class="code">finalScore = 0.45 * keyword + 0.45 * semantic + 0.10 * freshness</div>
-                    <h3>3. 失效与一致性</h3>
-                    <p>更新路径优先保证业务正确性：必要时宁可牺牲部分缓存命中，也要避免脏读扩散。</p>
-                  </div>
-                </div>
-
-                <div class="card" style="padding:0">
-                  <div class="toc">
-                    <h4>目录</h4>
-                    <a href="#">1. 问题背景</a>
-                    <a href="#">2. 核心策略</a>
-                    <a href="#">3. 失效与一致性</a>
-                    <a href="#">4. 监控与演进</a>
-                  </div>
-                  <div class="toc" style="border-top:1px solid rgba(255,255,255,.10)">
-                    <h4>相关推荐</h4>
-                    <a href="#">MySQL + Redis：读写一致性的工程化方案</a>
-                    <a href="#">缓存 Key 设计与 TTL 策略</a>
-                    <a href="#">热点保护：互斥锁与单飞</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="page" id="page-admin" data-page="admin">
-            <div class="frame">
-              <div class="frameHeader">
-                <div class="title">
-                  <strong>后台 · 文章编辑</strong>
-                  <span>发布后触发切片与向量索引</span>
-                </div>
-                <div class="actions">
-                  <span class="badge"><span class="dot warn"></span>索引：PENDING</span>
-                  <button class="btn">保存草稿</button>
-                  <button class="btn primary">发布</button>
-                </div>
-              </div>
-
-              <div class="fieldRow">
-                <div class="field">
-                  <div class="label">标题</div>
-                  <input class="input" value="Redis 缓存策略实践指南" />
-                </div>
-                <div class="field">
-                  <div class="label">Slug</div>
-                  <input class="input" value="redis-cache-strategy" />
-                </div>
-              </div>
-
-              <div class="fieldRow" style="padding-top:0">
-                <div class="field">
-                  <div class="label">摘要</div>
-                  <input class="input" value="从穿透/击穿/雪崩到一致性与监控，给出可落地的工程方案。" />
-                </div>
-                <div class="field">
-                  <div class="label">分类 / 标签</div>
-                  <div class="adminGrid" style="padding:0">
-                    <input class="input" value="分类：数据库" />
-                    <input class="input" value="标签：#Redis #缓存 #一致性" />
-                  </div>
-                </div>
-              </div>
-
-              <div class="editorSplit">
-                <div class="pane">
-                  <h4>Markdown 编辑</h4>
-                  <textarea class="textarea"># Redis 缓存策略实践指南
-
-## 1. 问题背景
-缓存为了降低延迟与削峰，但也会引入一致性风险。
-
-## 2. 核心策略
-- Cache Aside
-- TTL 分层
-- 热点保护
-
-## 3. 失效与一致性
-按业务链路评估可接受的最终一致性窗口。</textarea>
-                </div>
-                <div class="pane">
-                  <h4>预览</h4>
-                  <div class="card">
-                    <h3>Redis 缓存策略实践指南</h3>
-                    <p>从穿透/击穿/雪崩到一致性与监控，给出可落地的工程方案。</p>
-                    <div class="tags">
-                      <span class="tag brand">#Redis</span>
-                      <span class="tag green">#缓存</span>
-                      <span class="tag cyan">#一致性</span>
-                    </div>
-                  </div>
-                  <div class="card" style="margin-top:12px">
-                    <h3>索引行为</h3>
-                    <p>发布后：切片 → 生成 embedding → 写入向量库 → 清理缓存。</p>
-                    <div class="tags">
-                      <span class="tag">Chunking</span>
-                      <span class="tag cyan">Embedding</span>
-                      <span class="tag brand">Vector Upsert</span>
-                      <span class="tag green">Cache Bust</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="statusLine">
-                <span class="badge"><span class="dot brand"></span>状态：草稿</span>
-                <div style="display:flex; gap:10px;">
-                  <button class="btn">预览</button>
-                  <button class="btn green">重建索引</button>
-                  <button class="btn">下线</button>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+        </section>
       </main>
     </div>
 
+    <div class="mask" id="authMask" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <button class="close" id="closeAuth" aria-label="关闭">×</button>
+        <h3 id="authTitle">登录</h3>
+
+        <div id="loginView" class="form-view">
+          <label>邮箱</label>
+          <input type="email" />
+          <label>密码</label>
+          <input type="password" />
+          <button class="primary">登录</button>
+          <p>没有账号？<button class="link" id="showRegister">去注册</button></p>
+        </div>
+
+        <div id="registerView" class="form-view hidden">
+          <label>邮箱</label>
+          <input type="email" />
+          <label>密码</label>
+          <input type="password" />
+          <button class="primary">注册</button>
+          <p>已有账号？<button class="link" id="showLogin">去登录</button></p>
+        </div>
+      </div>
+    </div>
+
     <script>
-      const nav = document.getElementById("nav");
-      const pages = Array.from(document.querySelectorAll(".page"));
-      const links = Array.from(nav.querySelectorAll("a"));
+      const buttons = document.querySelectorAll('.view-btn');
+      const scenes = {
+        public: document.getElementById('public-scene'),
+        admin: document.getElementById('admin-scene'),
+      };
 
-      function setActive(page) {
-        pages.forEach((p) => p.classList.toggle("active", p.dataset.page === page));
-        links.forEach((a) => a.classList.toggle("active", a.dataset.page === page));
-      }
-
-      function resolveFromHash() {
-        const hash = (location.hash || "#home").replace("#", "");
-        const page = ["home", "search", "article", "admin"].includes(hash) ? hash : "home";
-        setActive(page);
-      }
-
-      nav.addEventListener("click", (e) => {
-        const target = e.target.closest("a");
-        if (!target) return;
-        e.preventDefault();
-        const page = target.dataset.page;
-        history.replaceState(null, "", `#${page}`);
-        setActive(page);
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          buttons.forEach((x) => x.classList.remove('active'));
+          btn.classList.add('active');
+          Object.values(scenes).forEach((x) => x.classList.remove('active'));
+          scenes[btn.dataset.view].classList.add('active');
+        });
       });
 
-      window.addEventListener("hashchange", resolveFromHash);
-      resolveFromHash();
+      const mask = document.getElementById('authMask');
+      const loginView = document.getElementById('loginView');
+      const registerView = document.getElementById('registerView');
+      const title = document.getElementById('authTitle');
+
+      function openAuth(mode) {
+        mask.classList.add('open');
+        if (mode === 'register') {
+          title.textContent = '注册';
+          loginView.classList.add('hidden');
+          registerView.classList.remove('hidden');
+        } else {
+          title.textContent = '登录';
+          registerView.classList.add('hidden');
+          loginView.classList.remove('hidden');
+        }
+      }
+
+      function closeAuth() {
+        mask.classList.remove('open');
+      }
+
+      document.getElementById('openAuth').addEventListener('click', () => openAuth('login'));
+      document.getElementById('closeAuth').addEventListener('click', closeAuth);
+      document.getElementById('showRegister').addEventListener('click', () => openAuth('register'));
+      document.getElementById('showLogin').addEventListener('click', () => openAuth('login'));
+      mask.addEventListener('click', (e) => {
+        if (e.target === mask) closeAuth();
+      });
     </script>
   </body>
 </html>

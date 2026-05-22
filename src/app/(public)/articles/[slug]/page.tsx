@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Button } from "antd";
 
 import { extractHeadings } from "@/lib/markdown/headings";
 import { slugifyHeading } from "@/lib/markdown/slug";
@@ -22,13 +23,13 @@ export default async function ArticleDetailPage({
         <div className="hero">
           <h1 className="heroTitle">未找到文章</h1>
           <p className="heroSub">请确认链接是否正确，或返回文章列表。</p>
-          <div className="heroRow" style={{ gridTemplateColumns: "auto auto" }}>
-            <Link className="btn" href="/articles">
+          <div className="heroRow heroActionsRow">
+            <Button className="btn" href="/articles">
               返回文章列表
-            </Link>
-            <Link className="btn btnPrimary" href="/search">
+            </Button>
+            <Button className="btn btnPrimary" href="/search" type="primary">
               去搜索
-            </Link>
+            </Button>
           </div>
         </div>
       </main>
@@ -54,7 +55,7 @@ export default async function ArticleDetailPage({
       </div>
 
       <div className="twoCol">
-        <div className="card" style={{ padding: 0 }}>
+        <div className="card cardNoPad">
           <div className="markdown">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -91,20 +92,20 @@ export default async function ArticleDetailPage({
           </div>
         </div>
 
-        <div className="card" style={{ padding: 0 }}>
+        <div className="card cardNoPad">
           <div className="toc" data-testid="article-detail-toc">
             <h4>目录</h4>
             {headings.length === 0 ? (
-              <div style={{ color: "rgba(255,255,255,.72)", fontSize: 13 }}>无标题结构</div>
+              <div className="tocEmpty">无标题结构</div>
             ) : (
               headings.map((h) => (
-                <a key={h.id} href={`#${h.id}`} style={{ paddingLeft: h.depth === 3 ? 18 : 10 }}>
+                <a key={h.id} href={`#${h.id}`} className={h.depth === 3 ? "tocLink tocLinkDepth3" : "tocLink"}>
                   {h.text}
                 </a>
               ))
             )}
           </div>
-          <div className="toc" style={{ borderTop: "1px solid rgba(255,255,255,.10)" }}>
+          <div className="toc tocDivider">
             <h4>相关推荐</h4>
             <RelatedArticles currentSlug={slug} relatedPromise={relatedPromise} />
           </div>
@@ -120,12 +121,12 @@ async function RelatedArticles(props: {
 }) {
   const result = await props.relatedPromise;
   if (!result) {
-    return <div style={{ color: "rgba(255,255,255,.72)", fontSize: 13 }}>数据未就绪</div>;
+    return <div className="tocEmpty">数据未就绪</div>;
   }
 
   const items = result.items.filter((x) => x.slug !== props.currentSlug).slice(0, 4);
   if (items.length === 0) {
-    return <div style={{ color: "rgba(255,255,255,.72)", fontSize: 13 }}>暂无</div>;
+    return <div className="tocEmpty">暂无</div>;
   }
 
   return (
