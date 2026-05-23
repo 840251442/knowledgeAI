@@ -24,6 +24,8 @@ model: "GPT-5 (copilot)"
 	- acceptance-reviewer：验收与合并建议
 4. 若任务复杂，必须创建并持续更新 `docs/superpowers/work-progress/<任务标识>/progress.md`。
 5. 若输入缺少关键信息，先补齐再执行。
+6. 所有阶段必须严格按 1 -> 7 顺序执行，不能跳步、并行或重排。
+7. 每完成一个阶段，都必须先输出该阶段摘要后再进入下一阶段。
 
 输出章节：
 - 目标与约束确认
