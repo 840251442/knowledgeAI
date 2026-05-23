@@ -1,7 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "antd";
 
 import { listPublishedArticles } from "@/services/article.service";
+
+const PAGE_SIZE = 12;
+
+function buildCanonicalUrl(input: { page: number; category?: string; tag?: string }) {
+  const params = new URLSearchParams();
+  params.set("page", String(input.page));
+  if (input.category) params.set("category", input.category);
+  if (input.tag) params.set("tag", input.tag);
+  return `/articles?${params.toString()}`;
+}
 
 export default async function PublicArticlesPage({
   searchParams,
@@ -9,16 +20,30 @@ export default async function PublicArticlesPage({
   searchParams: Promise<{ page?: string; category?: string; tag?: string }>;
 }) {
   const sp = await searchParams;
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const pageParam = sp.page;
+  const hasExplicitPage = pageParam !== undefined;
+  const isValidPageParam = pageParam ? /^[1-9]\d*$/.test(pageParam) : false;
+  const page = hasExplicitPage && isValidPageParam ? Number.parseInt(pageParam, 10) : 1;
   const categorySlug = sp.category || undefined;
   const tagSlug = sp.tag || undefined;
 
+  if (hasExplicitPage && !isValidPageParam) {
+    redirect(buildCanonicalUrl({ page: 1, category: categorySlug, tag: tagSlug }));
+  }
+
   const result = await listPublishedArticles({
     page,
-    pageSize: 12,
+    pageSize: PAGE_SIZE,
     categorySlug,
     tagSlug,
   }).catch(() => null);
+
+  if (result) {
+    const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+    if (page > totalPages) {
+      redirect(buildCanonicalUrl({ page: totalPages, category: categorySlug, tag: tagSlug }));
+    }
+  }
 
   return (
     <main className="panel">
