@@ -1,7 +1,7 @@
 # 工作流顺序约束进度
 
 ## 目标
-强制多 Agent 工作流严格按 1 -> 7 顺序执行，禁止跳步、并行或重排；并强制分支安全策略：目标分支基于当前分支创建，且目标分支不得等于当前分支；子 Agent 改动验收通过后仅推送到远端，不自动合并到当前分支。
+强制多 Agent 工作流严格按 1 -> 7 顺序执行，禁止跳步、并行或重排；并强制分支安全策略：目标分支基于当前分支创建，且目标分支不得等于当前分支；输入确认后必须先切换到目标分支，再创建计划/进度文档；子 Agent 改动验收通过后仅推送到远端，不自动合并到当前分支。
 
 ## 当前阶段
 文档约束修正与验证完成。
@@ -14,6 +14,7 @@
 - 已新增分支安全门禁：
   - 目标分支必须从当前分支创建。
   - 目标分支禁止与当前分支同名。
+  - 输入确认后必须先切换到目标分支，再进入需求/计划并创建文档。
   - 子 Agent 改动必须先合并到目标分支。
   - 验收通过后仅推送子 Agent 分支与目标分支到远端，不自动合并到当前分支。
 
@@ -27,6 +28,6 @@
 - 如后续需要，继续将同样的阶段门禁与分支门禁补到其它工作流入口。
 
 ## 验证证据
-- `read_file`：确认 `.github/agents/knowledge-orchestrator.agent.md` 已包含新分支门禁条款（目标分支来源、同名阻断、验收后仅推送远端）。
-- `read_file`：确认 `.github/prompts/run-multi-agent-workflow.prompt.md` 已包含分支策略硬门禁章节。
-- `read_file`：确认 `docs/superpowers/plans/2026-05-23-workflow-ordering.md` 已新增 publish choreography 描述并打勾完成。
+- `read_file`：确认 `.github/agents/knowledge-orchestrator.agent.md` 已包含“计划阶段前必须完成目标分支切换”的硬门禁条款。
+- `read_file`：确认 `.github/prompts/run-multi-agent-workflow.prompt.md` 已包含“先切目标分支再进入需求/计划”的硬门禁条款。
+- `read_file`：确认 `docs/superpowers/plans/2026-05-23-workflow-ordering.md` 已新增 Task 3 并打勾完成。
