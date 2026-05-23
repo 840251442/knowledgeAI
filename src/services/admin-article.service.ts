@@ -2,11 +2,17 @@ import { prisma } from "@/lib/db/prisma";
 import { invalidatePublicContentCaches } from "@/lib/redis/cache";
 import { reindexArticleById } from "@/services/reindex.service";
 import type { AuthRole } from "@/lib/auth/session";
+import type { EmbeddingStatus, EmbeddingTaskStatus } from "@prisma/client";
 
 type ArticleActor = {
   id: string;
   role: AuthRole;
 };
+
+type IndexState = "not_started" | "pending" | "running" | "success" | "failed";
+
+const EMBEDDING_STATUS_DONE: EmbeddingStatus = "DONE";
+const EMBEDDING_STATUS_FAILED: EmbeddingStatus = "FAILED";
 
 function whereForActor(actor: ArticleActor) {
   if (actor.role === "ADMIN") return {};
@@ -164,7 +170,7 @@ export async function updateAdminArticle(id: string, input: {
   }
   const before = await prisma.article.findUnique({
     where: { id },
-    select: { slug: true },
+    select: { slug: true, status: true },
   });
 
   if (Array.isArray(input.tagIds)) {
@@ -189,10 +195,12 @@ export async function updateAdminArticle(id: string, input: {
     select: { id: true, slug: true },
   });
 
-  await reindexArticleById({
-    articleId: updated.id,
-    taskType: "UPDATE",
-  });
+  if (before?.status === "PUBLISHED") {
+    await reindexArticleById({
+      articleId: updated.id,
+      taskType: "UPDATE",
+    });
+  }
 
   await invalidatePublicContentCaches({
     slugs: [before?.slug, updated.slug],
@@ -257,4 +265,97 @@ export async function unpublishAdminArticle(id: string, actor: ArticleActor) {
   });
 
   return { id: updated.id };
+}
+
+function mapTaskStatusToIndexState(status: EmbeddingTaskStatus): IndexState {
+  if (status === "FAILED") return "failed";
+  if (status === "RUNNING") return "running";
+  if (status === "PENDING") return "pending";
+  return "not_started";
+}
+
+export async function getAdminArticleIndexStatus(id: string, actor: ArticleActor) {
+  const article = await assertArticleAccessible(id, actor);
+
+  const [latestTask, chunkTotal, chunkDone, chunkFailed, latestSuccessTask] = await Promise.all([
+    prisma.embeddingTask.findFirst({
+      where: { articleId: article.id },
+      orderBy: [{ createdAt: "desc" }],
+      select: {
+        id: true,
+        taskType: true,
+        status: true,
+        startedAt: true,
+        finishedAt: true,
+        errorMessage: true,
+        createdAt: true,
+      },
+    }),
+    prisma.articleChunk.count({ where: { articleId: article.id } }),
+    prisma.articleChunk.count({ where: { articleId: article.id, embeddingStatus: EMBEDDING_STATUS_DONE } }),
+    prisma.articleChunk.count({ where: { articleId: article.id, embeddingStatus: EMBEDDING_STATUS_FAILED } }),
+    prisma.embeddingTask.findFirst({
+      where: { articleId: article.id, status: "SUCCESS" },
+      orderBy: [{ finishedAt: "desc" }, { createdAt: "desc" }],
+      select: { finishedAt: true },
+    }),
+  ]);
+
+  let state: IndexState = "not_started";
+  if (latestTask) {
+    if (latestTask.status === "SUCCESS") {
+      state = chunkDone > 0 ? "success" : "not_started";
+    } else {
+      state = mapTaskStatusToIndexState(latestTask.status);
+    }
+  }
+
+  return {
+    articleId: article.id,
+    state,
+    latestTask: latestTask
+      ? {
+          id: latestTask.id,
+          taskType: latestTask.taskType,
+          status: latestTask.status,
+          startedAt: latestTask.startedAt ? latestTask.startedAt.toISOString() : null,
+          finishedAt: latestTask.finishedAt ? latestTask.finishedAt.toISOString() : null,
+          errorMessage: latestTask.errorMessage,
+          createdAt: latestTask.createdAt.toISOString(),
+        }
+      : null,
+    chunkSummary: {
+      total: chunkTotal,
+      done: chunkDone,
+      failed: chunkFailed,
+    },
+    lastSuccessAt: latestSuccessTask?.finishedAt ? latestSuccessTask.finishedAt.toISOString() : null,
+  };
+}
+
+export async function triggerAdminArticleReindex(id: string, actor: ArticleActor) {
+  const article = await assertArticleAccessible(id, actor);
+
+  const runningTask = await prisma.embeddingTask.findFirst({
+    where: {
+      articleId: article.id,
+      status: { in: ["PENDING", "RUNNING"] },
+    },
+    orderBy: [{ createdAt: "desc" }],
+    select: { id: true },
+  });
+
+  if (runningTask) {
+    throw new Error("INDEX_TASK_RUNNING");
+  }
+
+  const result = await reindexArticleById({
+    articleId: article.id,
+    taskType: "MANUAL",
+  });
+
+  return {
+    taskId: result.taskId,
+    state: result.finalStatus === "SUCCESS" ? (result.chunkCount > 0 ? "success" : "not_started") : "failed",
+  } as const;
 }

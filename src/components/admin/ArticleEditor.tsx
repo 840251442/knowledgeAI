@@ -2,7 +2,7 @@
 
 import MDEditor from "@uiw/react-md-editor";
 import ReactMarkdown from "react-markdown";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Input, Select, message } from "antd";
 import remarkGfm from "remark-gfm";
 
@@ -36,6 +36,28 @@ type EditorState =
 
 type AiDraftState = "idle" | "generating" | "done" | "error";
 
+type IndexState = "not_started" | "pending" | "running" | "success" | "failed";
+
+type IndexStatusPayload = {
+  articleId: string;
+  state: IndexState;
+  latestTask: {
+    id: string;
+    taskType: string;
+    status: string;
+    startedAt: string | null;
+    finishedAt: string | null;
+    errorMessage: string | null;
+    createdAt: string;
+  } | null;
+  chunkSummary: {
+    total: number;
+    done: number;
+    failed: number;
+  };
+  lastSuccessAt: string | null;
+};
+
 function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
@@ -48,6 +70,21 @@ function getStatusLabel(status: string) {
 
 function getSlugLabel(mode: EditorMode) {
   return mode === "create" ? "地址" : "Slug";
+}
+
+function getIndexStateLabel(state: IndexState) {
+  if (state === "pending") return "排队中";
+  if (state === "running") return "处理中";
+  if (state === "success") return "已完成";
+  if (state === "failed") return "失败";
+  return "未触发";
+}
+
+function getIndexStateDotClass(state: IndexState) {
+  if (state === "success") return "dotGreen";
+  if (state === "failed") return "dotWarn";
+  if (state === "running" || state === "pending") return "dotCyan";
+  return "dotBrand";
 }
 
 export default function ArticleEditor(props: {
@@ -69,6 +106,10 @@ export default function ArticleEditor(props: {
   const [aiPreview, setAiPreview] = useState("");
   const [aiState, setAiState] = useState<AiDraftState>("idle");
   const [aiError, setAiError] = useState("");
+  const [indexStatus, setIndexStatus] = useState<IndexStatusPayload | null>(null);
+  const [indexLoading, setIndexLoading] = useState(props.mode === "edit");
+  const [indexBusy, setIndexBusy] = useState(false);
+  const [indexError, setIndexError] = useState("");
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -80,6 +121,85 @@ export default function ArticleEditor(props: {
   }, [title, slug, contentMarkdown, categoryId, props.mode]);
 
   const selectedTags = useMemo(() => new Set(tagIds), [tagIds]);
+
+  const loadIndexStatus = useCallback(async (showLoading = true) => {
+    if (props.mode !== "edit" || !props.initial.id) return null;
+    if (showLoading) setIndexLoading(true);
+
+    try {
+      const res = await authFetch(`/api/admin/articles/${props.initial.id}/index-status`);
+      const json = (await res.json()) as
+        | { success: true; data: IndexStatusPayload }
+        | { success: false; error: { message: string } };
+
+      if (!res.ok || !json.success) {
+        setIndexError(json.success ? "索引状态获取失败" : json.error.message);
+        return null;
+      }
+
+      setIndexError("");
+      setIndexStatus(json.data);
+      return json.data;
+    } catch {
+      setIndexError("索引状态获取失败");
+      return null;
+    } finally {
+      if (showLoading) setIndexLoading(false);
+    }
+  }, [props.mode, props.initial.id]);
+
+  async function pollIndexStatus(maxRounds = 30, intervalMs = 2000) {
+    for (let i = 0; i < maxRounds; i += 1) {
+      const data = await loadIndexStatus(i === 0);
+      if (!data) return;
+      if (data.state === "success" || data.state === "failed" || data.state === "not_started") {
+        return;
+      }
+
+      await new Promise<void>((resolve) => {
+        window.setTimeout(() => resolve(), intervalMs);
+      });
+    }
+
+    messageApi.info("索引状态仍在处理中，可稍后刷新查看");
+  }
+
+  async function triggerReindex() {
+    if (props.mode !== "edit" || !props.initial.id) return;
+    setIndexBusy(true);
+    setIndexError("");
+
+    try {
+      const res = await authFetch(`/api/admin/articles/${props.initial.id}/reindex`, { method: "POST" });
+      const json = (await res.json()) as
+        | { success: true; data: { taskId: string; state: IndexState } }
+        | { success: false; error: { message: string } };
+
+      if (!res.ok || !json.success) {
+        setIndexError(json.success ? "重建索引失败" : json.error.message);
+        return;
+      }
+
+      messageApi.success("索引重建已触发");
+      await pollIndexStatus();
+    } catch {
+      setIndexError("重建索引失败");
+    } finally {
+      setIndexBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (props.mode !== "edit" || !props.initial.id) return;
+
+    const timer = window.setTimeout(() => {
+      void loadIndexStatus();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loadIndexStatus, props.mode, props.initial.id]);
 
   function toggleTag(id: string) {
     setTagIds((prev) => {
@@ -225,6 +345,9 @@ export default function ArticleEditor(props: {
         return;
       }
       setState({ type: "success", message: "已保存" });
+      if (status === "PUBLISHED") {
+        void pollIndexStatus();
+      }
       setTimeout(() => setState({ type: "idle" }), 900);
     } catch {
       setState({ type: "error", message: "网络错误" });
@@ -286,6 +409,7 @@ export default function ArticleEditor(props: {
       setStatus("PUBLISHED");
       messageApi.success("发布成功");
       setState({ type: "success", message: "已发布" });
+      void pollIndexStatus();
       setTimeout(() => setState({ type: "idle" }), 900);
     } catch {
       setState({ type: "error", message: "网络错误" });
@@ -307,6 +431,7 @@ export default function ArticleEditor(props: {
       }
       setStatus("DRAFT");
       setState({ type: "success", message: "已下线" });
+      void loadIndexStatus();
       setTimeout(() => setState({ type: "idle" }), 900);
     } catch {
       setState({ type: "error", message: "网络错误" });
@@ -335,6 +460,8 @@ export default function ArticleEditor(props: {
   }
 
   const statusDotClass = status === "PUBLISHED" ? "dotGreen" : status === "DRAFT" ? "dotWarn" : "dotCyan";
+  const indexState: IndexState = props.mode === "create" ? "not_started" : (indexStatus?.state ?? "pending");
+  const indexDotClass = getIndexStateDotClass(indexState);
 
   const showSlugField = props.mode === "edit";
 
@@ -568,12 +695,29 @@ export default function ArticleEditor(props: {
       </div>
 
       <div className="statusLine">
-        <span className="badge">
-          <span className={cx("dot", "dotBrand")} />
-          索引：待处理
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span className="badge">
+            <span className={cx("dot", indexDotClass)} />
+            索引：{indexLoading ? "加载中" : getIndexStateLabel(indexState)}
+          </span>
+          {props.mode === "edit" && indexStatus?.chunkSummary ? (
+            <span className="subMuted">
+              切片 {indexStatus.chunkSummary.done}/{indexStatus.chunkSummary.total}
+            </span>
+          ) : null}
+          {props.mode === "create" ? <span className="subMuted">发布后开始构建索引</span> : null}
+          {indexError ? <span className="subMuted">{indexError}</span> : null}
+          {props.mode === "edit" && indexStatus?.latestTask?.errorMessage ? (
+            <span className="subMuted">失败原因：{indexStatus.latestTask.errorMessage}</span>
+          ) : null}
+        </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <Button className={cx("btn", "btnGreen")} type="primary" disabled>
+          <Button
+            className={cx("btn", "btnGreen")}
+            type="primary"
+            onClick={() => void triggerReindex()}
+            disabled={props.mode !== "edit" || indexBusy || indexLoading || state.type !== "idle"}
+          >
             重建索引
           </Button>
         </div>

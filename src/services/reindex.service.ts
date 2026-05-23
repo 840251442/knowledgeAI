@@ -97,6 +97,8 @@ export async function reindexArticleById(input: {
     });
 
     return {
+      taskId: task.id,
+      finalStatus: "SUCCESS" as const,
       articleId: article.id,
       slug: article.slug,
       chunkCount: embeddedChunks.length,
