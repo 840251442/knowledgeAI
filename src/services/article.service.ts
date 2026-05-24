@@ -1,3 +1,6 @@
+import { ArticleStatus } from "@prisma/client";
+import type { ArticleCommentStatus } from "@prisma/client";
+
 import type { ArticleDetail, ArticleListItem } from "@/types/article";
 
 import { getCacheVersion, readThroughJson } from "@/lib/redis/cache";
@@ -9,7 +12,7 @@ function mapArticleListItem(article: {
   title: string;
   slug: string;
   summary: string | null;
-  status: string;
+  status: ArticleStatus;
   publishedAt: Date | null;
   updatedAt: Date;
   category: { id: string; name: string; slug: string };
@@ -20,7 +23,7 @@ function mapArticleListItem(article: {
     title: article.title,
     slug: article.slug,
     summary: article.summary,
-    status: article.status as ArticleListItem["status"],
+    status: article.status,
     publishedAt: article.publishedAt ? article.publishedAt.toISOString() : null,
     updatedAt: article.updatedAt.toISOString(),
     category: article.category,
@@ -37,14 +40,14 @@ function mapArticleDetail(article: {
   publishedAt: Date | null;
   updatedAt: Date;
   contentMarkdown: string;
-  commentStatus: string;
+  commentStatus: ArticleCommentStatus;
   category: { id: string; name: string; slug: string };
   tags: { tag: { id: string; name: string; slug: string } }[];
 }): ArticleDetail {
   return {
     ...mapArticleListItem(article),
     contentMarkdown: article.contentMarkdown,
-    commentStatus: article.commentStatus as ArticleDetail["commentStatus"],
+    commentStatus: article.commentStatus,
   };
 }
 
@@ -74,7 +77,7 @@ async function fetchPublishedArticleList(input: {
   const pageSize = input.pageSize;
 
   const where = {
-    status: "PUBLISHED" as const,
+    status: ArticleStatus.PUBLISHED,
     ...(input.categorySlug
       ? { category: { slug: input.categorySlug } }
       : undefined),
@@ -125,7 +128,7 @@ export async function getPublishedArticleBySlug(slug: string) {
     ttlSeconds: 600,
     loader: async () => {
       const row = await prisma.article.findFirst({
-        where: { slug, status: "PUBLISHED" },
+        where: { slug, status: ArticleStatus.PUBLISHED },
         include: {
           category: { select: { id: true, name: true, slug: true } },
           tags: { include: { tag: { select: { id: true, name: true, slug: true } } } },

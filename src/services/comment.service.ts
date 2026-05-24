@@ -1,3 +1,5 @@
+import { ArticleCommentStatus, ArticleStatus, CommentAuthorType } from "@prisma/client";
+
 import type { AuthRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import type { AdminCommentItem, ArticleCommentSummary, CommentView } from "@/types/article";
@@ -10,14 +12,14 @@ type CommentActor = {
 function mapComment(row: {
   id: string;
   articleId: string;
-  authorType: string;
+  authorType: CommentAuthorType;
   personalUserId: string | null;
   guestName: string | null;
   body: string;
   createdAt: Date;
   personalUser: { email: string | null; phone: string | null } | null;
 }): CommentView {
-  const isPersonal = row.authorType === "PERSONAL";
+  const isPersonal = row.authorType === CommentAuthorType.PERSONAL;
   const displayName = isPersonal
     ? row.personalUser?.email ?? row.personalUser?.phone ?? "已登录用户"
     : row.guestName?.trim() || "游客";
@@ -26,7 +28,7 @@ function mapComment(row: {
     id: row.id,
     articleId: row.articleId,
     author: {
-      type: isPersonal ? "PERSONAL" : "GUEST",
+      type: isPersonal ? CommentAuthorType.PERSONAL : CommentAuthorType.GUEST,
       userId: isPersonal ? row.personalUserId : null,
       displayName,
     },
@@ -37,7 +39,7 @@ function mapComment(row: {
 
 export async function listPublishedComments(slug: string): Promise<ArticleCommentSummary | null> {
   const article = await prisma.article.findFirst({
-    where: { slug, status: "PUBLISHED" },
+    where: { slug, status: ArticleStatus.PUBLISHED },
     select: { id: true, commentStatus: true },
   });
 
@@ -75,7 +77,7 @@ export async function createComment(input: {
   });
 
   if (!article) throw new Error("ARTICLE_NOT_FOUND");
-  if (article.commentStatus === "CLOSED") throw new Error("COMMENT_CLOSED");
+  if (article.commentStatus === ArticleCommentStatus.CLOSED) throw new Error("COMMENT_CLOSED");
 
   const isPersonal = input.actor?.role === "PERSONAL";
   const guestName = !isPersonal && typeof input.authorName === "string" ? input.authorName.trim() : null;
@@ -83,7 +85,7 @@ export async function createComment(input: {
   const created = await prisma.comment.create({
     data: {
       articleId: article.id,
-      authorType: isPersonal ? "PERSONAL" : "GUEST",
+      authorType: isPersonal ? CommentAuthorType.PERSONAL : CommentAuthorType.GUEST,
       personalUserId: isPersonal ? input.actor?.id ?? null : null,
       guestName: guestName || null,
       body: input.body,
@@ -118,7 +120,7 @@ export async function listAdminComments(input?: {
   page?: number;
   pageSize?: number;
   articleId?: string;
-  authorType?: "GUEST" | "PERSONAL";
+  authorType?: CommentAuthorType;
 }) {
   const page = input?.page ?? 1;
   const pageSize = input?.pageSize ?? 20;

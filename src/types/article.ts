@@ -1,7 +1,13 @@
-export type ArticleStatus = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "REJECTED" | "ARCHIVED";
+import type {
+  ArticleCommentStatus as PrismaArticleCommentStatus,
+  ArticleStatus as PrismaArticleStatus,
+  CommentAuthorType as PrismaCommentAuthorType,
+} from "@prisma/client";
 
-export type ArticleCommentStatus = "OPEN" | "CLOSED";
-export type CommentAuthorType = "GUEST" | "PERSONAL";
+export type ArticleStatus = PrismaArticleStatus;
+
+export type ArticleCommentStatus = PrismaArticleCommentStatus;
+export type CommentAuthorType = PrismaCommentAuthorType;
 
 export type CategorySummary = {
   id: string;

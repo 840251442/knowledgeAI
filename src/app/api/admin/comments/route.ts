@@ -2,6 +2,7 @@ import { apiError, apiOk } from "@/lib/api/response";
 import { parsePositiveInt } from "@/lib/api/query";
 import { requireRole } from "@/lib/auth/require-role";
 import { listAdminComments } from "@/services/comment.service";
+import { CommentAuthorType } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -19,8 +20,9 @@ export async function GET(request: Request) {
   const articleId = url.searchParams.get("articleId") ?? undefined;
   const authorType = url.searchParams.get("authorType") ?? undefined;
 
-  const normalizedAuthorType =
-    authorType === "GUEST" || authorType === "PERSONAL" ? authorType : undefined;
+  const normalizedAuthorType = Object.values(CommentAuthorType).includes(authorType as CommentAuthorType)
+    ? (authorType as CommentAuthorType)
+    : undefined;
 
   try {
     const result = await listAdminComments({
