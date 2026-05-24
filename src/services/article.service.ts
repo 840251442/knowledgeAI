@@ -37,12 +37,14 @@ function mapArticleDetail(article: {
   publishedAt: Date | null;
   updatedAt: Date;
   contentMarkdown: string;
+  commentStatus: string;
   category: { id: string; name: string; slug: string };
   tags: { tag: { id: string; name: string; slug: string } }[];
 }): ArticleDetail {
   return {
     ...mapArticleListItem(article),
     contentMarkdown: article.contentMarkdown,
+    commentStatus: article.commentStatus as ArticleDetail["commentStatus"],
   };
 }
 
