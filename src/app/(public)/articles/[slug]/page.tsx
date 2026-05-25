@@ -3,9 +3,12 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "antd";
 
+import ArticleCommentSection from "@/components/home/ArticleCommentSection";
+import { requireUser } from "@/lib/auth/require-user";
 import { extractHeadings } from "@/lib/markdown/headings";
 import { slugifyHeading } from "@/lib/markdown/slug";
 import { getPublishedArticleBySlug, listPublishedArticles } from "@/services/article.service";
+import { listPublishedComments } from "@/services/comment.service";
 
 type RelatedPromise = Promise<Awaited<ReturnType<typeof listPublishedArticles>> | null>;
 
@@ -42,6 +45,26 @@ export default async function ArticleDetailPage({
     pageSize: 8,
     categorySlug: article.category.slug,
   }).catch(() => null);
+
+  const [commentSummary, personalUser, adminUser] = await Promise.all([
+    listPublishedComments(slug).catch(() => null),
+    requireUser("PERSONAL"),
+    requireUser("ADMIN"),
+  ]);
+
+  const currentUser = adminUser
+    ? {
+        id: adminUser.id,
+        role: "ADMIN" as const,
+        displayName: adminUser.username || adminUser.email,
+      }
+    : personalUser
+      ? {
+          id: personalUser.id,
+          role: "PERSONAL" as const,
+          displayName: personalUser.email ?? personalUser.phone ?? "已登录用户",
+        }
+      : null;
 
   return (
     <main className="panel">
@@ -110,6 +133,15 @@ export default async function ArticleDetailPage({
             <RelatedArticles currentSlug={slug} relatedPromise={relatedPromise} />
           </div>
         </div>
+      </div>
+
+      <div className="articleCommentsWrap">
+        <ArticleCommentSection
+          slug={slug}
+          commentStatus={commentSummary?.commentStatus ?? article.commentStatus}
+          initialComments={commentSummary?.items ?? []}
+          currentUser={currentUser}
+        />
       </div>
     </main>
   );
