@@ -117,10 +117,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ) : null}
               <NavLink href="/admin/logout" label="退出" pill="退出" active={pathname.startsWith("/admin/logout")} />
               {isAdmin ? (
-                <Link className="navLink" href="/">
+                <a className="navLink" href="/">
                   <span>返回公开站</span>
                   <span className="pill">公开站</span>
-                </Link>
+                </a>
               ) : null}
             </nav>
           )}
