@@ -407,6 +407,26 @@
   color: #9bb0d6;
 }
 
+.commentArticle {
+  display: grid;
+  gap: 4px;
+}
+
+.commentArticleTitle {
+  font-size: 13px;
+  color: #e3edff;
+}
+
+.commentBody {
+  font-size: 12px;
+  line-height: 1.55;
+  color: #dbe7ff;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .cellActions {
   display: flex;
   justify-content: flex-end;
