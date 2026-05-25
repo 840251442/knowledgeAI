@@ -20,6 +20,16 @@ enum ArticleStatus {
   ARCHIVED
 }
 
+enum ArticleCommentStatus {
+  OPEN
+  CLOSED
+}
+
+enum CommentAuthorType {
+  GUEST
+  PERSONAL
+}
+
 enum ReviewType {
   AI
   HUMAN
@@ -77,6 +87,7 @@ model PersonalUser {
   isActive     Boolean   @default(true)
   articles     Article[] @relation("PersonalArticleAuthor")
   reviews      ArticleReview[]
+  comments     Comment[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -110,6 +121,7 @@ model Article {
   contentMarkdown String        @db.Text
   coverImage      String?       @db.VarChar(500)
   status          ArticleStatus @default(DRAFT)
+  commentStatus   ArticleCommentStatus @default(OPEN)
   isFeatured      Boolean       @default(false)
   publishedAt     DateTime?
   categoryId      String
@@ -122,6 +134,7 @@ model Article {
   chunks          ArticleChunk[]
   embeddingTasks  EmbeddingTask[]
   reviews         ArticleReview[]
+  comments        Comment[]
   topSearchLogs   SearchLog[]      @relation("SearchLogTopArticle")
   views           ArticleView[]
   createdAt       DateTime      @default(now())
@@ -149,6 +162,22 @@ model ArticleReview {
 
   @@index([articleId, createdAt])
   @@index([decision, createdAt])
+}
+
+model Comment {
+  id             String           @id @default(cuid())
+  articleId      String
+  authorType     CommentAuthorType
+  personalUserId String?
+  guestName      String?          @db.VarChar(80)
+  body           String           @db.Text
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  article        Article          @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  personalUser   PersonalUser?    @relation(fields: [personalUserId], references: [id], onDelete: SetNull)
+
+  @@index([articleId, createdAt])
+  @@index([personalUserId, createdAt])
 }
 
 model PhoneOtpCode {

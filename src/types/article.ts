@@ -1,4 +1,13 @@
-export type ArticleStatus = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "REJECTED" | "ARCHIVED";
+import type {
+  ArticleCommentStatus as PrismaArticleCommentStatus,
+  ArticleStatus as PrismaArticleStatus,
+  CommentAuthorType as PrismaCommentAuthorType,
+} from "@prisma/client";
+
+export type ArticleStatus = PrismaArticleStatus;
+
+export type ArticleCommentStatus = PrismaArticleCommentStatus;
+export type CommentAuthorType = PrismaCommentAuthorType;
 
 export type CategorySummary = {
   id: string;
@@ -26,4 +35,33 @@ export type ArticleListItem = {
 
 export type ArticleDetail = ArticleListItem & {
   contentMarkdown: string;
+  commentStatus: ArticleCommentStatus;
+};
+
+export type CommentAuthor = {
+  type: CommentAuthorType;
+  userId: string | null;
+  displayName: string;
+};
+
+export type CommentView = {
+  id: string;
+  articleId: string;
+  author: CommentAuthor;
+  body: string;
+  createdAt: string;
+};
+
+export type ArticleCommentSummary = {
+  articleId: string;
+  commentStatus: ArticleCommentStatus;
+  items: CommentView[];
+};
+
+export type AdminCommentItem = CommentView & {
+  article: {
+    id: string;
+    title: string;
+    slug: string;
+  };
 };

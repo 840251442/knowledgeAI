@@ -77,43 +77,51 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           ) : (
             <nav className="nav">
-            <NavLink
-              href="/admin/articles"
-              label="文章管理"
-              pill="文章"
-              active={pathname.startsWith("/admin/articles")}
-            />
-            {isAdmin ? (
               <NavLink
-                href="/admin/categories"
-                label="分类管理"
-                pill="分类"
-                active={pathname.startsWith("/admin/categories")}
+                href="/admin/articles"
+                label="文章管理"
+                pill="文章"
+                active={pathname.startsWith("/admin/articles")}
               />
-            ) : null}
-            {isAdmin ? (
-              <NavLink
-                href="/admin/tags"
-                label="标签管理"
-                pill="标签"
-                active={pathname.startsWith("/admin/tags")}
-              />
-            ) : null}
-            {isAdmin ? (
-              <NavLink
-                href="/admin/search-logs"
-                label="搜索日志"
-                pill="日志"
-                active={pathname.startsWith("/admin/search-logs")}
-              />
-            ) : null}
-            <NavLink href="/admin/logout" label="退出" pill="退出" active={pathname.startsWith("/admin/logout")} />
-            {isAdmin ? (
-              <Link className="navLink" href="/">
-                <span>返回公开站</span>
-                <span className="pill">公开站</span>
-              </Link>
-            ) : null}
+              {isAdmin ? (
+                <NavLink
+                  href="/admin/categories"
+                  label="分类管理"
+                  pill="分类"
+                  active={pathname.startsWith("/admin/categories")}
+                />
+              ) : null}
+              {isAdmin ? (
+                <NavLink
+                  href="/admin/tags"
+                  label="标签管理"
+                  pill="标签"
+                  active={pathname.startsWith("/admin/tags")}
+                />
+              ) : null}
+              {isAdmin ? (
+                <NavLink
+                  href="/admin/comments"
+                  label="评论管理"
+                  pill="评论"
+                  active={pathname.startsWith("/admin/comments")}
+                />
+              ) : null}
+              {isAdmin ? (
+                <NavLink
+                  href="/admin/search-logs"
+                  label="搜索日志"
+                  pill="日志"
+                  active={pathname.startsWith("/admin/search-logs")}
+                />
+              ) : null}
+              <NavLink href="/admin/logout" label="退出" pill="退出" active={pathname.startsWith("/admin/logout")} />
+              {isAdmin ? (
+                <Link className="navLink" href="/">
+                  <span>返回公开站</span>
+                  <span className="pill">公开站</span>
+                </Link>
+              ) : null}
             </nav>
           )}
         </aside>
