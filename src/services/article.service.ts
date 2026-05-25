@@ -36,7 +36,7 @@ function mapArticleDetail(article: {
   title: string;
   slug: string;
   summary: string | null;
-  status: string;
+  status: ArticleStatus;
   publishedAt: Date | null;
   updatedAt: Date;
   contentMarkdown: string;
