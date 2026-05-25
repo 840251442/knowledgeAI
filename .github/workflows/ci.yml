@@ -28,6 +28,7 @@ jobs:
       CI: true
       NODE_ENV: test
       DATABASE_URL: postgresql://knowledgeai:knowledgeai_dev@127.0.0.1:5432/knowledgeai?schema=public
+      DIRECT_URL: postgresql://knowledgeai:knowledgeai_dev@127.0.0.1:5432/knowledgeai?schema=public
       AUTH_SECRET: knowledgeai-e2e-secret
       E2E_FAST_REVIEW: "1"
     steps:
