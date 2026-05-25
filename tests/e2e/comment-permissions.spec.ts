@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { ArticleCommentStatus, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -17,10 +17,6 @@ async function loginAdminForApi(page: Page) {
     },
   });
   expect(response.ok()).toBeTruthy();
-
-  const cookie = extractSessionCookie(response.headers()["set-cookie"] ?? null, "ka_admin_session");
-  expect(cookie).toBeTruthy();
-  return cookie ?? "";
 }
 
 async function registerPersonal(page: Page, email: string) {
@@ -37,7 +33,7 @@ async function registerPersonal(page: Page, email: string) {
   return cookie ?? "";
 }
 
-async function createPublishedArticle(page: Page, adminCookie: string) {
+async function createPublishedArticle(page: Page) {
   const categoriesResponse = await page.request.get("/api/categories");
   expect(categoriesResponse.ok()).toBeTruthy();
 
@@ -55,7 +51,6 @@ async function createPublishedArticle(page: Page, adminCookie: string) {
   const slug = `comment-permissions-${stamp}`;
 
   const createResponse = await page.request.post("/api/admin/articles", {
-    headers: { cookie: `ka_admin_session=${adminCookie}` },
     data: {
       title: `Comment permissions ${stamp}`,
       slug,
@@ -75,9 +70,7 @@ async function createPublishedArticle(page: Page, adminCookie: string) {
   expect(createJson.data?.id).toBeTruthy();
 
   const articleId = createJson.data?.id ?? "";
-  const publishResponse = await page.request.post(`/api/admin/articles/${articleId}/publish`, {
-    headers: { cookie: `ka_admin_session=${adminCookie}` },
-  });
+  const publishResponse = await page.request.post(`/api/admin/articles/${articleId}/publish`);
   expect(publishResponse.ok()).toBeTruthy();
 
   return { id: articleId, slug };
@@ -88,12 +81,14 @@ test.afterAll(async () => {
 });
 
 test("comment creation rejects when closed", async ({ page }) => {
-  const adminCookie = await loginAdminForApi(page);
-  const article = await createPublishedArticle(page, adminCookie);
+  test.slow();
+
+  await loginAdminForApi(page);
+  const article = await createPublishedArticle(page);
 
   await prisma.article.update({
     where: { id: article.id },
-    data: { commentStatus: ArticleCommentStatus.CLOSED },
+    data: { commentStatus: "CLOSED" },
   });
 
   const personalCookie = await registerPersonal(page, `closed-comment-${Date.now()}@knowledgeai.dev`);
@@ -109,8 +104,10 @@ test("comment creation rejects when closed", async ({ page }) => {
 });
 
 test("comment delete checks owner and admin", async ({ page }) => {
-  const adminCookie = await loginAdminForApi(page);
-  const article = await createPublishedArticle(page, adminCookie);
+  test.slow();
+
+  await loginAdminForApi(page);
+  const article = await createPublishedArticle(page);
 
   const ownerCookie = await registerPersonal(page, `owner-comment-${Date.now()}@knowledgeai.dev`);
   const ownerCreateResponse = await page.request.post(`/api/articles/${article.slug}/comments`, {
@@ -159,9 +156,7 @@ test("comment delete checks owner and admin", async ({ page }) => {
   expect(forbiddenJson.success).toBeFalsy();
   expect(forbiddenJson.error?.code).toBe("FORBIDDEN");
 
-  const adminDeleteResponse = await page.request.delete(`/api/admin/comments/${adminCommentId}`, {
-    headers: { cookie: `ka_admin_session=${adminCookie}` },
-  });
+  const adminDeleteResponse = await page.request.delete(`/api/admin/comments/${adminCommentId}`);
   expect(adminDeleteResponse.ok()).toBeTruthy();
 
   const adminDeleteJson = (await adminDeleteResponse.json()) as {

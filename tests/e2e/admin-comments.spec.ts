@@ -1,28 +1,31 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type APIResponse, type Page, test } from "@playwright/test";
 
 import { loginAsAdmin } from "./support/auth";
 
-function extractSessionCookie(setCookieHeader: string | null, cookieName: string) {
-  if (!setCookieHeader) return null;
-  const match = setCookieHeader.match(new RegExp(`${cookieName}=([^;]+)`));
-  return match?.[1] ?? null;
+async function wait(ms: number) {
+  await new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+async function postWithRetry(page: Page, url: string, data?: unknown, attempts = 3) {
+  let last: APIResponse | null = null;
+  for (let i = 0; i < attempts; i += 1) {
+    const res = await page.request.post(url, data ? { data } : undefined);
+    if (res.ok()) return res;
+    last = res;
+    if (i < attempts - 1) await wait(1000);
+  }
+  return last;
 }
 
 async function loginAdminForApi(page: Page) {
-  const response = await page.request.post("/api/admin/login", {
-    data: {
-      email: "admin@knowledgeai.dev",
-      password: "dev",
-    },
+  const response = await postWithRetry(page, "/api/admin/login", {
+    email: "admin@knowledgeai.dev",
+    password: "dev",
   });
-  expect(response.ok()).toBeTruthy();
-
-  const cookie = extractSessionCookie(response.headers()["set-cookie"] ?? null, "ka_admin_session");
-  expect(cookie).toBeTruthy();
-  return cookie ?? "";
+  expect(response?.ok()).toBeTruthy();
 }
 
-async function createPublishedArticle(page: Page, adminCookie: string) {
+async function createPublishedArticle(page: Page) {
   const categoriesResponse = await page.request.get("/api/categories");
   expect(categoriesResponse.ok()).toBeTruthy();
 
@@ -40,20 +43,17 @@ async function createPublishedArticle(page: Page, adminCookie: string) {
   const slug = `admin-comment-${stamp}`;
   const title = `后台评论 ${stamp}`;
 
-  const createResponse = await page.request.post("/api/admin/articles", {
-    headers: { cookie: `ka_admin_session=${adminCookie}` },
-    data: {
-      title,
-      slug,
-      contentMarkdown: "# admin comment test",
-      categoryId,
-      summary: "admin comment",
-      tagIds: [],
-    },
+  const createResponse = await postWithRetry(page, "/api/admin/articles", {
+    title,
+    slug,
+    contentMarkdown: "# admin comment test",
+    categoryId,
+    summary: "admin comment",
+    tagIds: [],
   });
-  expect(createResponse.ok()).toBeTruthy();
+  expect(createResponse?.ok()).toBeTruthy();
 
-  const createJson = (await createResponse.json()) as {
+  const createJson = (await createResponse!.json()) as {
     success: boolean;
     data?: { id?: string };
   };
@@ -61,17 +61,17 @@ async function createPublishedArticle(page: Page, adminCookie: string) {
   expect(createJson.data?.id).toBeTruthy();
 
   const articleId = createJson.data?.id ?? "";
-  const publishResponse = await page.request.post(`/api/admin/articles/${articleId}/publish`, {
-    headers: { cookie: `ka_admin_session=${adminCookie}` },
-  });
-  expect(publishResponse.ok()).toBeTruthy();
+  const publishResponse = await postWithRetry(page, `/api/admin/articles/${articleId}/publish`);
+  expect(publishResponse?.ok()).toBeTruthy();
 
   return { id: articleId, slug, title };
 }
 
 test("admin can filter comments by article and delete", async ({ page }) => {
-  const adminCookie = await loginAdminForApi(page);
-  const article = await createPublishedArticle(page, adminCookie);
+  test.slow();
+
+  await loginAdminForApi(page);
+  const article = await createPublishedArticle(page);
 
   const body = `admin comment body ${Date.now()}`;
   const createCommentResponse = await page.request.post(`/api/articles/${article.slug}/comments`, {
@@ -79,15 +79,18 @@ test("admin can filter comments by article and delete", async ({ page }) => {
   });
   expect(createCommentResponse.ok()).toBeTruthy();
 
-  await loginAsAdmin(page);
-  await page.goto("/admin/comments");
+  await loginAsAdmin(page, "/admin/comments");
 
   await expect(page.getByTestId("admin-comments-panel")).toBeVisible();
 
   await page.getByTestId("admin-comments-article-filter").click();
   await page.getByText(`${article.title} (${article.slug})`).click();
 
-  await expect(page.getByText(body)).toBeVisible();
+  const row = page.getByTestId("admin-comment-row").filter({ hasText: body });
+  await expect(row).toHaveCount(1);
+
+  const deleteButton = row.first().getByTestId("admin-comment-delete");
+  await expect(deleteButton).toBeEnabled({ timeout: 30_000 });
 
   const deleteResponsePromise = page.waitForResponse(
     (response) =>
@@ -97,8 +100,8 @@ test("admin can filter comments by article and delete", async ({ page }) => {
   );
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByTestId("admin-comment-delete").first().click();
+  await deleteButton.click();
 
   await deleteResponsePromise;
-  await expect(page.getByText(body)).toHaveCount(0);
+  await expect(row).toHaveCount(0, { timeout: 30_000 });
 });

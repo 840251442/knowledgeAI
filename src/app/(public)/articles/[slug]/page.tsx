@@ -52,13 +52,13 @@ export default async function ArticleDetailPage({
     requireUser("ADMIN"),
   ]);
 
-  const currentUser = adminUser
+  const currentUser = adminUser?.role === "ADMIN"
     ? {
         id: adminUser.id,
         role: "ADMIN" as const,
         displayName: adminUser.username || adminUser.email,
       }
-    : personalUser
+    : personalUser?.role === "PERSONAL"
       ? {
           id: personalUser.id,
           role: "PERSONAL" as const,

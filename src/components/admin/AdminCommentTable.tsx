@@ -85,20 +85,28 @@ export default function AdminCommentTable(props: {
   }, []);
 
   useEffect(() => {
-    void refreshArticles();
+    const timer = window.setTimeout(() => {
+      void refreshArticles();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [refreshArticles]);
 
   useEffect(() => {
     const filter = articleId === "all" ? undefined : articleId;
-    if (!mounted.current) {
-      mounted.current = true;
-      if (!props.initialData) {
-        void load({ page, pageSize, articleId: filter });
-      }
-      return;
-    }
 
-    void load({ page, pageSize, articleId: filter });
+    const timer = window.setTimeout(() => {
+      if (!mounted.current) {
+        mounted.current = true;
+        if (!props.initialData) {
+          void load({ page, pageSize, articleId: filter });
+        }
+        return;
+      }
+
+      void load({ page, pageSize, articleId: filter });
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [articleId, load, page, pageSize, props.initialData]);
 
   async function remove(item: AdminCommentItem) {

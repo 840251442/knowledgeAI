@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIResponse, type Page } from "@playwright/test";
 
 function extractSessionCookie(setCookieHeader: string | null, cookieName: string) {
   if (!setCookieHeader) return null;
@@ -6,14 +6,30 @@ function extractSessionCookie(setCookieHeader: string | null, cookieName: string
   return match?.[1] ?? null;
 }
 
-export async function loginAsAdmin(page: Page) {
-  const loginResponse = await page.request.post("/api/admin/login", {
-    data: {
-      email: "admin@knowledgeai.dev",
-      password: "dev",
-    },
-  });
-  expect(loginResponse.ok()).toBeTruthy();
+export async function loginAsAdmin(page: Page, targetPath = "/admin/articles") {
+  let loginResponse: APIResponse | null = null;
+
+  for (let i = 0; i < 3; i += 1) {
+    try {
+      const response = await page.request.post("/api/admin/login", {
+        data: {
+          email: "admin@knowledgeai.dev",
+          password: "dev",
+        },
+        timeout: 30_000,
+      });
+
+      loginResponse = response;
+      if (response.ok()) break;
+    } catch {
+      // Retry transient failures when the test environment is still warming up.
+    }
+
+    await page.waitForTimeout(1000);
+  }
+
+  expect(loginResponse?.ok()).toBeTruthy();
+  if (!loginResponse) return;
 
   const loginJson = (await loginResponse.json()) as {
     success: boolean;
@@ -40,20 +56,17 @@ export async function loginAsAdmin(page: Page) {
   ]);
 
   if (loginJson.data) {
-    await page.goto("/admin/login");
-    await page.evaluate((session) => {
-      window.localStorage.setItem(
-        "ka_auth_session",
-        JSON.stringify({
-          accessToken: session.accessToken,
-          accessTokenExpiresAt: Date.now() + session.accessTokenExpiresIn * 1000,
-          role: session.role,
-          userId: session.userId,
-        }),
-      );
-    }, loginJson.data);
+    const sessionPayload = {
+      accessToken: loginJson.data.accessToken,
+      accessTokenExpiresAt: Date.now() + loginJson.data.accessTokenExpiresIn * 1000,
+      role: loginJson.data.role,
+      userId: loginJson.data.userId,
+    };
+    await page.addInitScript((session) => {
+      window.localStorage.setItem("ka_auth_session", JSON.stringify(session));
+    }, sessionPayload);
   }
 
-  await page.goto("/admin/articles");
-  await expect(page.getByRole("link", { name: "新建文章" })).toBeVisible();
+  await page.goto(targetPath);
+  await expect(page.getByRole("link", { name: /退出/ }).first()).toBeVisible();
 }

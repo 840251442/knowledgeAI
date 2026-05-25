@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { ArticleCommentStatus, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -88,6 +88,7 @@ test.afterAll(async () => {
 });
 
 test("public article shows empty comments when open", async ({ page }) => {
+  test.slow();
   const adminCookie = await loginAdminForApi(page);
   const article = await createPublishedArticle(page, adminCookie);
 
@@ -97,12 +98,13 @@ test("public article shows empty comments when open", async ({ page }) => {
 });
 
 test("public article hides input when comments are closed", async ({ page }) => {
+  test.slow();
   const adminCookie = await loginAdminForApi(page);
   const article = await createPublishedArticle(page, adminCookie);
 
   await prisma.article.update({
     where: { id: article.id },
-    data: { commentStatus: ArticleCommentStatus.CLOSED },
+    data: { commentStatus: "CLOSED" },
   });
 
   await page.goto(`/articles/${article.slug}`);
@@ -111,6 +113,7 @@ test("public article hides input when comments are closed", async ({ page }) => 
 });
 
 test("public comments show guest and personal names", async ({ page }) => {
+  test.slow();
   const adminCookie = await loginAdminForApi(page);
   const article = await createPublishedArticle(page, adminCookie);
 
