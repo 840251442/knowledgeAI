@@ -16,7 +16,7 @@ user-invocable: true
 2. 需求阶段：严格按 brainstorming skill 执行需求精炼并保存设计文档。
 3. 计划阶段：调用 writing-plans，基于设计文档生成或更新计划文档。
 4. 进度阶段：若任务复杂，创建并维护 `docs/superpowers/work-progress/<任务标识>/progress.md`。
-5. 执行阶段：先完成隔离开发准备（独立分支或 git worktree），再调用 superpowers-subagent-driven-development 分发子 Agent 任务，并同步更新 progress.md。
+5. 执行阶段：先完成隔离开发准备（独立分支或 git worktree），并为每个独立子任务建立各自的 worktree/子分支，再调用 superpowers-subagent-driven-development 分发子 Agent 任务，并同步更新 progress.md。
 6. 验收阶段：调用 acceptance-reviewer 执行质量门禁，并回写验证结果到 progress.md。
 7. 收口阶段：输出合并建议、风险与未验证项。
 
@@ -42,7 +42,8 @@ user-invocable: true
   - 用户输入的“目标分支”必须从当前分支创建，且仅用于本次子 Agent 开发与集成。
   - 目标分支禁止等于当前分支；若相等必须阻断并要求用户改名后继续。
   - 输入确认后必须立即切换到目标分支；后续需求、计划、进度、实现与验收记录都在目标分支上下文完成。
-  - 所有子 Agent 改动先合并到目标分支，验收通过后仅推送子 Agent 分支与目标分支到远端，不自动合并到当前分支。
+  - 在分发任何实现子 Agent 之前，必须先为每个独立子任务创建隔离工作区：优先使用独立 worktree，其次使用独立子分支，不得让多个实现子 Agent 直接共享主工作区。
+  - 所有子 Agent 改动先合并到各自任务分支，再由目标分支做集成；验收通过后仅推送子 Agent 分支与目标分支到远端，不自动合并到当前分支。
   - 在阶段摘要中显式记录：当前分支、目标分支、子分支/集成分支、worktree 路径（若使用）。
   - 若用户明确要求“直接在当前分支开发”，需先再次确认风险并记录确认后方可继续。
 

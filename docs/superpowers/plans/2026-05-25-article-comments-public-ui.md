@@ -19,5 +19,5 @@
 
 ## Task 3: Validation and documentation sync
 
-- [ ] Run the focused E2E spec and record results.
+- [x] Run the focused E2E spec and record results.
 - [x] Update progress log and capture verification evidence.

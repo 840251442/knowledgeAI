@@ -36,4 +36,4 @@
 - Modify: `docs/superpowers/work-progress/comments-admin-management-20260524/progress.md`
 
 - [x] Add admin E2E coverage for filtering and deletion.
-- [ ] Run quality checks and record verification evidence.
+- [x] Run quality checks and record verification evidence.
