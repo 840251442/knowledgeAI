@@ -45,6 +45,7 @@
 }
 
 .homeListPanel {
+  display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -128,6 +129,7 @@
   background: var(--surface-bg);
   box-shadow: var(--shadow);
   overflow: hidden;
+  overflow-y: auto;
 }
 
 .hero {

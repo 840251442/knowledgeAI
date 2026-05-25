@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Input } from "antd";
 import Image from "next/image";
-import { loadAuthSession, refreshAuthSession, saveAuthSession } from "@/lib/auth/client-session";
+import { clearAuthSession, loadAuthSession, refreshAuthSession, saveAuthSession } from "@/lib/auth/client-session";
 
 type LoginState =
   | { type: "idle" }
@@ -18,6 +18,15 @@ type LoginSuccessPayload = {
   accessToken: string;
   accessTokenExpiresIn: number;
 };
+
+async function probeAdminSession() {
+  const res = await fetch("/api/admin/articles?page=1&pageSize=1", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+  return res.ok;
+}
 
 export default function AdminLoginPage() {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -34,10 +43,15 @@ export default function AdminLoginPage() {
     async function ensureSession() {
       const local = loadAuthSession();
       if (local && local.accessTokenExpiresAt > Date.now()) {
-        if (!cancelled) {
-          window.location.replace("/admin/articles");
+        try {
+          const hasSession = await probeAdminSession();
+          if (hasSession && !cancelled) {
+            window.location.replace("/admin/articles");
+            return;
+          }
+        } catch {
+          // Ignore transient network errors and continue with refresh fallback.
         }
-        return;
       }
 
       const refreshed = await refreshAuthSession();
@@ -47,6 +61,7 @@ export default function AdminLoginPage() {
       }
 
       if (!cancelled) {
+        clearAuthSession();
         setCheckingSession(false);
       }
     }

@@ -58,6 +58,8 @@ AI 在线知识库（公开站 + 管理后台 + 混合搜索）。
   - `EMBEDDING_MODEL`
   - `AI_WRITER_MODEL`
   - `AI_WRITER_MAX_CHARS`
+  - `AUTH_ACCESS_TOKEN_TTL_SECONDS`（默认 `2592000`，即 30 天）
+  - `AUTH_REFRESH_TOKEN_TTL_SECONDS`（默认 `2592000`，即 30 天）
 
 推荐先切到项目要求的 Node 版本：
 
@@ -235,6 +237,7 @@ npm run ai:draft:probe -- --keyword "Redis 缓存一致性"
 - 个人发文：先进入 AI 合规审核；通过后自动发布，拒绝或异常转人工审核
 - 密码存储：服务端哈希存储，客户端不做自定义加密绕过 HTTPS
 - 限流：登录、注册和 OTP 请求均有基础频控，避免暴力请求
+- Token 过期：默认 Access Token 30 天、Refresh Token 30 天（可用 `AUTH_ACCESS_TOKEN_TTL_SECONDS`/`AUTH_REFRESH_TOKEN_TTL_SECONDS` 覆盖）
 
 然后执行：
 
