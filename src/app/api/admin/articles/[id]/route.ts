@@ -52,6 +52,8 @@ export async function PUT(
     slug?: unknown;
     summary?: unknown;
     contentMarkdown?: unknown;
+    content?: unknown;
+    body?: unknown;
     categoryId?: unknown;
     tagIds?: unknown;
   };
@@ -62,11 +64,20 @@ export async function PUT(
       : undefined;
 
   try {
+    const contentMarkdown =
+      typeof body.contentMarkdown === "string"
+        ? body.contentMarkdown
+        : typeof body.content === "string"
+          ? body.content
+          : typeof body.body === "string"
+            ? body.body
+            : undefined;
+
     const updated = await updateAdminArticle(id, {
       ...(typeof body.title === "string" ? { title: body.title } : undefined),
       ...(typeof body.slug === "string" ? { slug: body.slug } : undefined),
       ...(body.summary === null || typeof body.summary === "string" ? { summary: body.summary as string | null } : undefined),
-      ...(typeof body.contentMarkdown === "string" ? { contentMarkdown: body.contentMarkdown } : undefined),
+      ...(typeof contentMarkdown === "string" ? { contentMarkdown } : undefined),
       ...(typeof body.categoryId === "string" ? { categoryId: body.categoryId } : undefined),
       ...(tagIds ? { tagIds } : undefined),
       actor: { id: user.id, role: user.role },
