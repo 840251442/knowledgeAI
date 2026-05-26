@@ -1,6 +1,7 @@
 import { expect, test, type APIResponse, type Page } from "@playwright/test";
 
 import { loginAsAdmin } from "./support/auth";
+import { articleEditorSelectors } from "./support/selectors";
 
 async function wait(ms: number) {
   await new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -118,4 +119,55 @@ test("publish, update and unpublish invalidate public content views", async ({ p
 
   await publicPage.goto(`/articles/${encodedSlug}`);
   await expect(publicPage.getByRole("heading", { name: "未找到文章" })).toBeVisible();
+});
+
+test("admin article editor saves markdown changes and reloads latest content", async ({ page }) => {
+  test.setTimeout(120_000);
+
+  const stamp = Date.now();
+  const title = `editor-save-${stamp}`;
+  const slug = `editor-save-${stamp}`;
+  const initialMarkdown = "# 初始正文\n\n旧内容";
+  const updatedMarkdown = "# 初始正文\n\n新内容";
+
+  await loginAsAdmin(page);
+  const categoryId = await getBackendCategoryId(page);
+
+  const createRes = await requestWithRetry(page, "POST", "/api/admin/articles", {
+    title,
+    slug,
+    summary: "编辑页保存验证",
+    contentMarkdown: initialMarkdown,
+    categoryId,
+    tagIds: [],
+  });
+  expect(createRes?.ok()).toBeTruthy();
+
+  const createJson = (await createRes!.json()) as {
+    success: boolean;
+    data?: { id?: string };
+  };
+  expect(createJson.success).toBeTruthy();
+  const articleId = createJson.data?.id ?? "";
+  expect(articleId).toBeTruthy();
+
+  await page.goto(`/admin/articles/${articleId}/edit`);
+  await expect(page.getByTestId(articleEditorSelectors.root)).toBeVisible();
+  await expect(page.getByTestId(articleEditorSelectors.markdown)).toHaveValue(initialMarkdown);
+
+  const markdownInput = page.getByTestId(articleEditorSelectors.markdown);
+  await markdownInput.click();
+  await markdownInput.press("Meta+A");
+  await markdownInput.fill(updatedMarkdown);
+
+  const saveResponsePromise = page.waitForResponse((response) => {
+    return response.url().includes(`/api/admin/articles/${articleId}`) && response.request().method() === "PUT";
+  });
+  await page.getByTestId(articleEditorSelectors.save).click();
+  const saveResponse = await saveResponsePromise;
+  expect(saveResponse.ok()).toBeTruthy();
+
+  await page.reload();
+  await expect(page.getByTestId(articleEditorSelectors.root)).toBeVisible();
+  await expect(page.getByTestId(articleEditorSelectors.markdown)).toHaveValue(updatedMarkdown);
 });
