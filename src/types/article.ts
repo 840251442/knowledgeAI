@@ -1,13 +1,17 @@
 import type {
   ArticleCommentStatus as PrismaArticleCommentStatus,
+  ArticleImportTaskStatus as PrismaArticleImportTaskStatus,
   ArticleStatus as PrismaArticleStatus,
   CommentAuthorType as PrismaCommentAuthorType,
+  UserRole as PrismaUserRole,
 } from "@prisma/client";
 
 export type ArticleStatus = PrismaArticleStatus;
 
 export type ArticleCommentStatus = PrismaArticleCommentStatus;
 export type CommentAuthorType = PrismaCommentAuthorType;
+export type ArticleImportTaskStatus = PrismaArticleImportTaskStatus;
+export type UserRole = PrismaUserRole;
 
 export type CategorySummary = {
   id: string;
@@ -64,4 +68,28 @@ export type AdminCommentItem = CommentView & {
     title: string;
     slug: string;
   };
+};
+
+export type ArticleImportTaskItem = {
+  id: string;
+  uploaderRole: UserRole;
+  uploaderId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  storagePath: string;
+  status: ArticleImportTaskStatus;
+  parseModel: string | null;
+  parsedTitle: string | null;
+  parsedSummary: string | null;
+  parsedContent: string | null;
+  articleId: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  retryCount: number;
+  maxRetries: number;
+  startedAt: string | null;
+  finishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
