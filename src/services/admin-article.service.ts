@@ -231,6 +231,9 @@ export async function publishAdminArticle(id: string, actor: ArticleActor) {
   if (before.status === "PUBLISHED") {
     throw new Error("ARTICLE_ALREADY_PUBLISHED");
   }
+  if (before.status === "PENDING_REVIEW") {
+    throw new Error("ARTICLE_ALREADY_PENDING");
+  }
 
   const updated = await prisma.article.update({
     where: { id },

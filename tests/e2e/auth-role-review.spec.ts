@@ -190,8 +190,9 @@ test("publish should return 409 when article is pending review", async ({ page }
 
   const publishJson = publishResult.body as {
     success: boolean;
-    error?: { code?: string };
+    error?: { code?: string; message?: string };
   };
   expect(publishJson.success).toBeFalsy();
   expect(publishJson.error?.code).toBe("ALREADY_PENDING");
+  expect(publishJson.error?.message).toContain("审核");
 });

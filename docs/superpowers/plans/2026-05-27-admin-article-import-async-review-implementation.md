@@ -440,3 +440,18 @@ Expected: PASS
 git add docs/records/non-upgrade-changelog.md docs/superpowers/work-progress
 git commit -m "docs: record import workflow verification evidence"
 ```
+
+### Hotfix 2026-05-28: PENDING_REVIEW 发布阻断
+
+**Files:**
+- Modify: `src/app/admin/articles/page.tsx`
+- Modify: `src/services/admin-article.service.ts`
+- Verify: `src/app/api/admin/articles/[id]/publish/route.ts`
+- Modify: `tests/e2e/auth-role-review.spec.ts`
+- Modify: `docs/superpowers/work-progress/admin-article-import-async-review/progress.md`
+
+- [x] 前端互斥修复：`PENDING_REVIEW` 状态禁用“发布”按钮。
+- [x] 服务端兜底修复：`publishAdminArticle` 对 `PENDING_REVIEW` 抛 `ARTICLE_ALREADY_PENDING`。
+- [x] API 契约校验：发布路由保持 `ARTICLE_ALREADY_PENDING -> 409 + ALREADY_PENDING`。
+- [x] 最小回归测试：补强待审核发布冲突断言，覆盖冲突错误文案。
+- [x] 质量验证：`npm run lint`、`npm run typecheck` 通过。

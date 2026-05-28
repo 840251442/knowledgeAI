@@ -30,6 +30,9 @@
 - [x] UI 子任务已完成：新增导入任务页面与失败重试按钮（`import-task-retry`）和状态标识（`import-task-status`）。
 - [x] UI 子任务已完成：新增审核列表页面，展示 AI 审核中/命中风险/待人工状态。
 - [x] 关键交互测试已补充：`tests/e2e/admin-auth.spec.ts` 增加入口导航用例。
+- [x] 质量阻断修复（2026-05-28）：后台文章列表中 `PENDING_REVIEW` 状态与 `PUBLISHED` 一样禁用“发布”按钮。
+- [x] 服务端兜底修复（2026-05-28）：`publishAdminArticle` 新增 `PENDING_REVIEW` 拦截并抛出 `ARTICLE_ALREADY_PENDING`。
+- [x] 最小回归测试补强（2026-05-28）：`tests/e2e/auth-role-review.spec.ts` 对待审核发布冲突补充错误文案断言，继续覆盖 409 + `ALREADY_PENDING`。
 
 ## 进行中
 - 准备最终验收与任务 7 异步处理执行入口实现。
@@ -48,6 +51,8 @@
 - 命令：`npm run db:generate && npm run lint && npm run typecheck`（DB 子任务 worktree）结果：通过。
 - 命令：`npm run lint && npm run typecheck`（后端子任务 worktree）结果：通过。
 - 命令：`npm run lint && npm run typecheck`（UI 子任务 worktree）结果：通过。
+- 命令：`npm run lint`（worktree：`feature/export-import-ui-v2`）结果：通过。
+- 命令：`npm run typecheck`（worktree：`feature/export-import-ui-v2`）结果：通过。
 - 提交：`1a227c4 feat: add article import task schema` 已在 `feature/export`。
 
 ## 变更文件
@@ -60,3 +65,6 @@
 - `src/components/admin/ArticleImportPanel.tsx`
 - `src/app/admin/admin.css`
 - `tests/e2e/admin-auth.spec.ts`
+- `src/app/admin/articles/page.tsx`
+- `src/services/admin-article.service.ts`
+- `tests/e2e/auth-role-review.spec.ts`

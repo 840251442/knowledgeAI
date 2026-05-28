@@ -145,7 +145,11 @@ export default async function AdminArticlesPage() {
                     </Button>
                     <form action={publishAction}>
                       <input type="hidden" name="id" value={item.id} />
-                      <Button className="btn" htmlType="submit" disabled={item.status === "PUBLISHED"}>
+                      <Button
+                        className="btn"
+                        htmlType="submit"
+                        disabled={item.status === "PUBLISHED" || item.status === "PENDING_REVIEW"}
+                      >
                         发布
                       </Button>
                     </form>
