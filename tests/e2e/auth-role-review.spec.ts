@@ -140,3 +140,58 @@ test("ai rejected article should enter admin manual queue", async ({ page }) => 
   expect(queueJson.success).toBeTruthy();
   expect(Array.isArray(queueJson.data?.items)).toBeTruthy();
 });
+
+test("publish should return 409 when article is pending review", async ({ page }) => {
+  const stamp = Date.now();
+  await loginPersonalByApi(page, `writer-pending-${stamp}@knowledgeai.dev`, "Writer#123456");
+
+  const createResult = await page.evaluate(async ({ stamp }) => {
+    const categoriesResponse = await fetch(new URL("/api/categories", window.location.origin).toString());
+    const categoriesJson = (await categoriesResponse.json()) as {
+      success: boolean;
+      data?: Array<{ id: string; slug: string }>;
+    };
+    const backendCategory = categoriesJson.data?.find((category) => category.slug === "backend");
+    if (!backendCategory?.id) {
+      return { ok: false, status: 500, body: { success: false, error: { message: "缺少分类" } } };
+    }
+
+    const response = await fetch(new URL("/api/me/articles", window.location.origin).toString(), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        title: `待审文章-${stamp}`,
+        slug: `pending-article-${stamp}`,
+        contentMarkdown: "# pending",
+        categoryId: backendCategory.id,
+        tagIds: [],
+      }),
+    });
+    return { ok: response.ok, status: response.status, body: await response.json() };
+  }, { stamp });
+  expect(createResult.ok).toBeTruthy();
+
+  const created = createResult.body as { success: boolean; data?: { id?: string } };
+  expect(created.success).toBeTruthy();
+  expect(created.data?.id).toBeTruthy();
+
+  const submitResult = await page.evaluate(async (articleId) => {
+    const response = await fetch(`/api/me/articles/${articleId}/submit`, { method: "POST" });
+    return { ok: response.ok, status: response.status, body: await response.json() };
+  }, created.data?.id);
+  expect(submitResult.ok).toBeTruthy();
+
+  const publishResult = await page.evaluate(async (articleId) => {
+    const response = await fetch(`/api/admin/articles/${articleId}/publish`, { method: "POST" });
+    return { ok: response.ok, status: response.status, body: await response.json() };
+  }, created.data?.id);
+  expect(publishResult.ok).toBeFalsy();
+  expect(publishResult.status).toBe(409);
+
+  const publishJson = publishResult.body as {
+    success: boolean;
+    error?: { code?: string };
+  };
+  expect(publishJson.success).toBeFalsy();
+  expect(publishJson.error?.code).toBe("ALREADY_PENDING");
+});

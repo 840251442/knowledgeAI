@@ -41,6 +41,7 @@ type ImportTaskRow = {
 const IMPORT_UPLOAD_DIR = path.join(process.cwd(), ".cache", "imports");
 const MAX_IMPORT_FILES = 5;
 const MAX_IMPORT_FILE_SIZE = 10 * 1024 * 1024;
+const UNSUPPORTED_STORAGE_PATH_PLACEHOLDER_PREFIX = "unsupported://not-stored";
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
@@ -169,19 +170,65 @@ export async function createImportTasks(input: { files: File[]; actor: ImportAct
     throw new Error("IMPORT_FILE_COUNT_INVALID");
   }
 
-  await mkdir(IMPORT_UPLOAD_DIR, { recursive: true });
-
   const created: ArticleImportTaskItem[] = [];
+  let hasStoredFile = false;
   for (const file of input.files) {
     const fileType = detectFileType(file);
+    const safeName = stripUnsafeFileName(file.name);
+
     if (!ALLOWED_MIME_TYPES.has(fileType)) {
-      throw new Error("IMPORT_FILE_TYPE_UNSUPPORTED");
+      const storagePath = `${UNSUPPORTED_STORAGE_PATH_PLACEHOLDER_PREFIX}/${randomUUID()}`;
+      const failedTask = (await prisma.articleImportTask.create({
+        data: {
+          uploaderRole: input.actor.role,
+          uploaderId: input.actor.id,
+          fileName: safeName,
+          fileType,
+          fileSize: file.size,
+          storagePath,
+          status: "FAILED",
+          errorCode: "UNSUPPORTED_FILE_TYPE",
+          errorMessage: "文件类型不受支持",
+          finishedAt: new Date(),
+        },
+        select: {
+          id: true,
+          uploaderRole: true,
+          uploaderId: true,
+          fileName: true,
+          fileType: true,
+          fileSize: true,
+          storagePath: true,
+          status: true,
+          parseModel: true,
+          parsedTitle: true,
+          parsedSummary: true,
+          parsedContent: true,
+          articleId: true,
+          errorCode: true,
+          errorMessage: true,
+          retryCount: true,
+          maxRetries: true,
+          startedAt: true,
+          finishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      })) as ImportTaskRow;
+
+      created.push(mapTask(failedTask));
+      continue;
     }
+
     if (file.size <= 0 || file.size > MAX_IMPORT_FILE_SIZE) {
       throw new Error("IMPORT_FILE_SIZE_INVALID");
     }
 
-    const safeName = stripUnsafeFileName(file.name);
+    if (!hasStoredFile) {
+      await mkdir(IMPORT_UPLOAD_DIR, { recursive: true });
+      hasStoredFile = true;
+    }
+
     const ext = path.extname(safeName);
     const storedFileName = `${Date.now()}-${randomUUID()}${ext}`;
     const storagePath = path.join(IMPORT_UPLOAD_DIR, storedFileName);
@@ -417,11 +464,19 @@ async function processTaskById(taskId: string) {
 
     return { taskId: task.id, status: "SUCCEEDED" as const, articleId: article.id };
   } catch (error) {
+    const rawCode = error instanceof Error ? error.message : "";
+    const errorCode =
+      rawCode === "IMPORT_AI_CONFIG_MISSING" ||
+      rawCode === "UNSUPPORTED_FILE_TYPE" ||
+      rawCode === "IMPORT_PARSE_EMPTY"
+        ? rawCode
+        : "IMPORT_PROCESS_FAILED";
+
     await prisma.articleImportTask.update({
       where: { id: task.id },
       data: {
         status: "FAILED",
-        errorCode: "IMPORT_PROCESS_FAILED",
+        errorCode,
         errorMessage: trimErrorMessage(error),
         finishedAt: new Date(),
       },
