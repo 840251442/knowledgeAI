@@ -116,7 +116,7 @@ it("routes parser model by file type", async () => {
 Run: `npm run test -- tests/e2e/article-index-observability.spec.ts --grep "routes parser model"`
 Expected: FAIL - selectImportModel undefined
 
-- [ ] **Step 3: Implement deterministic model router + parser facade**
+- [x] **Step 3: Implement deterministic model router + parser facade**
 
 ```typescript
 export function selectImportModel(fileType: string) {
@@ -127,7 +127,7 @@ export function selectImportModel(fileType: string) {
 }
 ```
 
-- [ ] **Step 4: Implement parse entry with normalized output**
+- [x] **Step 4: Implement parse entry with normalized output**
 
 ```typescript
 export async function parseImportFile(input: ParseInput): Promise<ParseOutput> {
@@ -142,7 +142,7 @@ export async function parseImportFile(input: ParseInput): Promise<ParseOutput> {
 }
 ```
 
-- [ ] **Step 5: Run targeted tests**
+- [x] **Step 5: Run targeted tests**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
@@ -176,7 +176,7 @@ it("rejects when upload count is greater than five", async ({ request }) => {
 Run: `npm run test:e2e -- tests/e2e/admin-comments.spec.ts --grep "greater than five"`
 Expected: FAIL - endpoint not implemented
 
-- [ ] **Step 3: Implement createImportTasks with validation**
+- [x] **Step 3: Implement createImportTasks with validation**
 
 ```typescript
 if (files.length < 1 || files.length > 5) {
@@ -184,7 +184,7 @@ if (files.length < 1 || files.length > 5) {
 }
 ```
 
-- [ ] **Step 4: Implement processNextImportTask state transition**
+- [x] **Step 4: Implement processNextImportTask state transition**
 
 ```typescript
 // QUEUED -> PROCESSING -> SUCCEEDED/FAILED (+ RETRYING)
@@ -196,7 +196,7 @@ await prisma.$transaction(async (tx) => {
 });
 ```
 
-- [ ] **Step 5: Run lint/typecheck**
+- [x] **Step 5: Run lint/typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
@@ -232,7 +232,7 @@ it("returns only own import tasks for personal user", async ({ request }) => {
 Run: `npm run test:e2e -- tests/e2e/public-article-comments.spec.ts --grep "own import tasks"`
 Expected: FAIL - endpoint missing
 
-- [ ] **Step 3: Implement POST import API with multipart parsing**
+- [x] **Step 3: Implement POST import API with multipart parsing**
 
 ```typescript
 const form = await request.formData();
@@ -241,14 +241,14 @@ const result = await createImportTasks({ files, actor: { id: user.id, role: user
 return apiOk(result, { status: 201 });
 ```
 
-- [ ] **Step 4: Implement GET imports and POST retry APIs**
+- [x] **Step 4: Implement GET imports and POST retry APIs**
 
 ```typescript
 const tasks = await listImportTasks({ actor, page, pageSize, status });
 const retried = await retryImportTask({ taskId, actor });
 ```
 
-- [ ] **Step 5: Run API-focused tests**
+- [x] **Step 5: Run API-focused tests**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
@@ -282,21 +282,21 @@ it("blocks duplicate publish when article is already published", async ({ reques
 Run: `npm run test:e2e -- tests/e2e/auth-role-review.spec.ts --grep "duplicate publish"`
 Expected: FAIL - current API may return success
 
-- [ ] **Step 3: Add strict state guards in publish/unpublish and review queue query**
+- [x] **Step 3: Add strict state guards in publish/unpublish and review queue query**
 
 ```typescript
 if (article.status === "PUBLISHED") throw new Error("ARTICLE_ALREADY_PUBLISHED");
 if (article.status === "DRAFT") throw new Error("ARTICLE_ALREADY_DRAFT");
 ```
 
-- [ ] **Step 4: Expose admin review queue endpoint**
+- [x] **Step 4: Expose admin review queue endpoint**
 
 ```typescript
 const queue = await listAdminReviewQueue();
 return apiOk({ items: queue });
 ```
 
-- [ ] **Step 5: Run tests and static checks**
+- [x] **Step 5: Run tests and static checks**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
