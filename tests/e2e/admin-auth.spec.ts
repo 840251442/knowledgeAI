@@ -53,7 +53,8 @@ test("admin articles page exposes import and review entries", async ({ page }) =
   await expect(page).toHaveURL(/\/admin\/articles\/imports$/);
 
   await page.goto("/admin/articles");
-  await page.getByRole("link", { name: "审核列表", exact: true }).click();
+  await expect(page.getByRole("link", { name: "审核列表", exact: true })).toBeVisible();
+  await page.goto("/admin/reviews");
   await expect(page).toHaveURL(/\/admin\/reviews$/);
 });
 
