@@ -333,7 +333,7 @@ it("shows import button and navigates to import list", async ({ page }) => {
 Run: `npm run test:e2e -- tests/e2e/admin-auth.spec.ts --grep "import button"`
 Expected: FAIL - entry missing
 
-- [ ] **Step 3: Implement admin articles UI actions and status badges**
+- [x] **Step 3: Implement admin articles UI actions and status badges**
 
 ```tsx
 <Button data-testid="admin-import-entry" href="/admin/articles/imports">导入任务</Button>
@@ -341,7 +341,7 @@ Expected: FAIL - entry missing
 <Button disabled={item.status !== "PUBLISHED"} onClick={() => unpublish(item.id)}>下线</Button>
 ```
 
-- [ ] **Step 4: Implement imports page and review queue page**
+- [x] **Step 4: Implement imports page and review queue page**
 
 ```tsx
 <span data-testid="import-task-status">{statusLabel(task.status)}</span>

@@ -8,7 +8,7 @@
 - 已发布文章禁止重复发布，需先下线再发布。
 
 ## 当前阶段
-- 阶段 5/7：执行阶段进行中（DB 与后端 API 子任务已完成并通过复审）。
+- 阶段 6/7：执行阶段进行中（UI 子任务已完成并通过静态质量门禁）。
 
 ## 已完成项
 - [x] 输入完整性检查完成（目标、约束、验收标准、目标分支、计划来源确认）。
@@ -26,26 +26,37 @@
 - [x] 导入 API 已完成：`/api/admin/articles/import`、`/api/admin/articles/imports`、`/api/admin/articles/imports/[taskId]/retry`。
 - [x] 审核队列 API 已完成：`/api/admin/reviews/queue`。
 - [x] 发布幂等保护已完成：支持 `ALREADY_PENDING`、`ALREADY_PUBLISHED` 冲突返回。
+- [x] UI 子任务已完成：文章管理新增导入/审核入口、行级发布/下线互斥按钮。
+- [x] UI 子任务已完成：新增导入任务页面与失败重试按钮（`import-task-retry`）和状态标识（`import-task-status`）。
+- [x] UI 子任务已完成：新增审核列表页面，展示 AI 审核中/命中风险/待人工状态。
+- [x] 关键交互测试已补充：`tests/e2e/admin-auth.spec.ts` 增加入口导航用例。
 
 ## 进行中
-- 分发并集成 UI 子任务（后台导入列表与审核列表页面）。
+- 准备最终验收与任务 7 异步处理执行入口实现。
 
 ## 阻塞项
 - 无。
 
 ## 下一步
-1. 分发第 3 个子 Agent（后台 UI 页面与交互）。
-2. 集成 UI 子任务并执行最终质量门禁。
-3. 调用 `acceptance-reviewer` 输出验收结论与合并建议。
+1. 执行任务 7（异步处理入口与探针脚本）。
+2. 运行最终验收命令并补充变更记录（Task 8）。
+3. 输出合并前验收结论与风险清单。
 
 ## 验证证据
 - 命令：`git branch --show-current` 结果：`feature/export`。
 - 命令：`node -v` 结果：`v22.22.3`（满足执行门禁）。
 - 命令：`npm run db:generate && npm run lint && npm run typecheck`（DB 子任务 worktree）结果：通过。
 - 命令：`npm run lint && npm run typecheck`（后端子任务 worktree）结果：通过。
+- 命令：`npm run lint && npm run typecheck`（UI 子任务 worktree）结果：通过。
 - 提交：`1a227c4 feat: add article import task schema` 已在 `feature/export`。
 
 ## 变更文件
 - `docs/designs/2026-05-27-admin-article-import-async-review-design.md`
 - `docs/superpowers/plans/2026-05-27-admin-article-import-async-review-implementation.md`
 - `docs/superpowers/work-progress/admin-article-import-async-review/progress.md`
+- `src/app/admin/articles/page.tsx`
+- `src/app/admin/articles/imports/page.tsx`
+- `src/app/admin/reviews/page.tsx`
+- `src/components/admin/ArticleImportPanel.tsx`
+- `src/app/admin/admin.css`
+- `tests/e2e/admin-auth.spec.ts`
