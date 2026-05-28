@@ -19,7 +19,7 @@
 - Modify: `src/types/article.ts`
 - Test: `tests/e2e/admin-ai-draft.spec.ts`
 
-- [ ] **Step 1: Write failing test for import task visibility contract**
+- [x] **Step 1: Write failing test for import task visibility contract**
 
 ```typescript
 it("shows import task status in admin import list", async ({ page }) => {
@@ -28,12 +28,12 @@ it("shows import task status in admin import list", async ({ page }) => {
 });
 ```
 
-- [ ] **Step 2: Run test to confirm failure**
+- [x] **Step 2: Run test to confirm failure**
 
 Run: `npm run test:e2e -- tests/e2e/admin-ai-draft.spec.ts --grep "import task status"`
 Expected: FAIL - route or selector not found
 
-- [ ] **Step 3: Add Prisma enum/model for import tasks**
+- [x] **Step 3: Add Prisma enum/model for import tasks**
 
 ```prisma
 enum ArticleImportTaskStatus {
@@ -74,17 +74,17 @@ model ArticleImportTask {
 }
 ```
 
-- [ ] **Step 4: Generate migration SQL and article import types**
+- [x] **Step 4: Generate migration SQL and article import types**
 
 Run: `npx prisma migrate dev --name article_import_tasks`
 Expected: migration created with enum/table/indexes
 
-- [ ] **Step 5: Run test to confirm schema-dependent compile passes**
+- [x] **Step 5: Run test to confirm schema-dependent compile passes**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add prisma/schema.prisma prisma/migrations src/types/article.ts tests/e2e/admin-ai-draft.spec.ts
@@ -111,7 +111,7 @@ it("routes parser model by file type", async () => {
 });
 ```
 
-- [ ] **Step 2: Run test to confirm failure**
+- [x] **Step 2: Run test to confirm failure**
 
 Run: `npm run test -- tests/e2e/article-index-observability.spec.ts --grep "routes parser model"`
 Expected: FAIL - selectImportModel undefined
@@ -171,7 +171,7 @@ it("rejects when upload count is greater than five", async ({ request }) => {
 });
 ```
 
-- [ ] **Step 2: Run test to confirm failure**
+- [x] **Step 2: Run test to confirm failure**
 
 Run: `npm run test:e2e -- tests/e2e/admin-comments.spec.ts --grep "greater than five"`
 Expected: FAIL - endpoint not implemented
@@ -227,7 +227,7 @@ it("returns only own import tasks for personal user", async ({ request }) => {
 });
 ```
 
-- [ ] **Step 2: Run test to confirm failure**
+- [x] **Step 2: Run test to confirm failure**
 
 Run: `npm run test:e2e -- tests/e2e/public-article-comments.spec.ts --grep "own import tasks"`
 Expected: FAIL - endpoint missing
@@ -277,7 +277,7 @@ it("blocks duplicate publish when article is already published", async ({ reques
 });
 ```
 
-- [ ] **Step 2: Run test to confirm failure**
+- [x] **Step 2: Run test to confirm failure**
 
 Run: `npm run test:e2e -- tests/e2e/auth-role-review.spec.ts --grep "duplicate publish"`
 Expected: FAIL - current API may return success
@@ -328,7 +328,7 @@ it("shows import button and navigates to import list", async ({ page }) => {
 });
 ```
 
-- [ ] **Step 2: Run test to confirm failure**
+- [x] **Step 2: Run test to confirm failure**
 
 Run: `npm run test:e2e -- tests/e2e/admin-auth.spec.ts --grep "import button"`
 Expected: FAIL - entry missing
@@ -378,7 +378,7 @@ it("processes queued import tasks and creates draft articles", async ({ request 
 });
 ```
 
-- [ ] **Step 2: Run test to confirm failure**
+- [x] **Step 2: Run test to confirm failure**
 
 Run: `npm run test:e2e -- tests/e2e/admin-ai-draft.spec.ts --grep "queued import tasks"`
 Expected: FAIL - endpoint missing

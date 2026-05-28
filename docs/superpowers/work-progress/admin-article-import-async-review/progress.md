@@ -20,6 +20,7 @@
 - [x] 本任务 progress 文档已创建并初始化。
 - [x] Node 执行门禁已通过：`node -v` 为 `v22.22.3`。
 - [x] 隔离开发准备已完成：已创建 3 个独立子分支与 worktree。
+- [x] DB 子任务已完成并通过二阶段复审，已集成到目标分支提交 `1a227c4`。
 
 ## 进行中
 - 子任务分发中：按 DB/API/UI 三条工作流交由子 Agent 执行并回并到目标分支。
@@ -28,10 +29,9 @@
 - 无。
 
 ## 下一步
-1. 分发第 1 个子 Agent（DB 导入任务模型与迁移）。
-2. 分发第 2 个子 Agent（后端 API/服务与状态机）。
-3. 分发第 3 个子 Agent（后台 UI 页面与交互）。
-4. 汇总子任务回并到目标分支后，调用 `acceptance-reviewer` 做质量门禁。
+1. 分发第 2 个子 Agent（后端 API/服务与状态机）。
+2. 分发第 3 个子 Agent（后台 UI 页面与交互）。
+3. 汇总子任务回并到目标分支后，调用 `acceptance-reviewer` 做质量门禁。
 
 ## 验证证据
 - 命令：`git branch --show-current` 结果：`feature/export`。
@@ -43,6 +43,8 @@
 - 命令：`date +%F` 结果：`2026-05-27`（文档命名日期基线）。
 - 产物：`docs/designs/2026-05-27-admin-article-import-async-review-design.md` 已创建。
 - 产物：`docs/superpowers/plans/2026-05-27-admin-article-import-async-review-implementation.md` 已创建。
+- 命令：`npm run db:generate && npm run lint && npm run typecheck`（DB 子任务 worktree）结果：通过。
+- 提交：`1a227c4 feat: add article import task schema` 已在 `feature/export`。
 
 ## 变更文件
 - `docs/designs/2026-05-27-admin-article-import-async-review-design.md`
