@@ -8,7 +8,7 @@
 - 已发布文章禁止重复发布，需先下线再发布。
 
 ## 当前阶段
-- 阶段 6/7：执行阶段进行中（UI 子任务已完成并通过静态质量门禁）。
+- 阶段 5/7：执行阶段已完成，待进入阶段 6/7 验收阶段。
 
 ## 已完成项
 - [x] 输入完整性检查完成（目标、约束、验收标准、目标分支、计划来源确认）。
@@ -33,17 +33,20 @@
 - [x] 质量阻断修复（2026-05-28）：后台文章列表中 `PENDING_REVIEW` 状态与 `PUBLISHED` 一样禁用“发布”按钮。
 - [x] 服务端兜底修复（2026-05-28）：`publishAdminArticle` 新增 `PENDING_REVIEW` 拦截并抛出 `ARTICLE_ALREADY_PENDING`。
 - [x] 最小回归测试补强（2026-05-28）：`tests/e2e/auth-role-review.spec.ts` 对待审核发布冲突补充错误文案断言，继续覆盖 409 + `ALREADY_PENDING`。
+- [x] 异步处理执行入口已补齐：`/api/admin/articles/imports/process`。
+- [x] 导入成功验收用例已补齐：`tests/e2e/admin-import-api.spec.ts` 覆盖“入队 -> 批处理 -> 草稿落库”。
+- [x] 关键 E2E 子集已全量通过（16 passed）。
 
 ## 进行中
-- 准备最终验收与任务 7 异步处理执行入口实现。
+- 准备调用验收 Agent 执行质量门禁与合并建议。
 
 ## 阻塞项
 - 无。
 
 ## 下一步
-1. 执行任务 7（异步处理入口与探针脚本）。
-2. 运行最终验收命令并补充变更记录（Task 8）。
-3. 输出合并前验收结论与风险清单。
+1. 调用 `acceptance-reviewer` 进行阶段 6/7 验收。
+2. 回写验收结论到 progress 与变更记录。
+3. 输出合并建议、风险与未验证项。
 
 ## 验证证据
 - 命令：`git branch --show-current` 结果：`feature/export`。
@@ -53,6 +56,8 @@
 - 命令：`npm run lint && npm run typecheck`（UI 子任务 worktree）结果：通过。
 - 命令：`npm run lint`（worktree：`feature/export-import-ui-v2`）结果：通过。
 - 命令：`npm run typecheck`（worktree：`feature/export-import-ui-v2`）结果：通过。
+- 命令：`npm run lint && npm run typecheck`（target branch：feature/export）结果：通过。
+- 命令：`npm run test:e2e -- tests/e2e/admin-import-api.spec.ts tests/e2e/auth-role-review.spec.ts tests/e2e/admin-auth.spec.ts` 结果：16 passed。
 - 提交：`1a227c4 feat: add article import task schema` 已在 `feature/export`。
 
 ## 变更文件
