@@ -8,7 +8,7 @@
 - 已发布文章禁止重复发布，需先下线再发布。
 
 ## 当前阶段
-- 阶段 5/7：执行阶段已完成，待进入阶段 6/7 验收阶段。
+- 阶段 7/7：收口阶段已完成，等待合并建议落定。
 
 ## 已完成项
 - [x] 输入完整性检查完成（目标、约束、验收标准、目标分支、计划来源确认）。
@@ -38,15 +38,15 @@
 - [x] 关键 E2E 子集已全量通过（16 passed）。
 
 ## 进行中
-- 准备调用验收 Agent 执行质量门禁与合并建议。
+- 无。
 
 ## 阻塞项
 - 无。
 
 ## 下一步
-1. 调用 `acceptance-reviewer` 进行阶段 6/7 验收。
-2. 回写验收结论到 progress 与变更记录。
-3. 输出合并建议、风险与未验证项。
+1. 汇总最终合并建议。
+2. 记录剩余未验证项与上线注意事项。
+3. 等待用户决定是否合并。
 
 ## 验证证据
 - 命令：`git branch --show-current` 结果：`feature/export`。
@@ -58,7 +58,16 @@
 - 命令：`npm run typecheck`（worktree：`feature/export-import-ui-v2`）结果：通过。
 - 命令：`npm run lint && npm run typecheck`（target branch：feature/export）结果：通过。
 - 命令：`npm run test:e2e -- tests/e2e/admin-import-api.spec.ts tests/e2e/auth-role-review.spec.ts tests/e2e/admin-auth.spec.ts` 结果：16 passed。
+- 命令：`npm run test:e2e -- tests/e2e/admin-import-api.spec.ts` 结果：2 passed。
+- 验收命令：`npm run lint`、`npm run typecheck`、`npm run test:e2e -- tests/e2e/admin-import-api.spec.ts tests/e2e/auth-role-review.spec.ts tests/e2e/admin-auth.spec.ts`。
+- 验收结果：`ACCEPTANCE_RESULT: PASS`（16 passed）。
 - 提交：`1a227c4 feat: add article import task schema` 已在 `feature/export`。
+- 提交：`4e5eab4 feat: add import processing endpoint and acceptance e2e` 已在 `feature/export`。
+
+## 合并建议
+- 可合并到上游分支。
+- 建议合并前保持 `feature/export` 当前提交 `4e5eab4` 为基线。
+- 合并后继续观察导入任务状态分布与失败码占比。
 
 ## 变更文件
 - `docs/designs/2026-05-27-admin-article-import-async-review-design.md`
