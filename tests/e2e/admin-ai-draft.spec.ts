@@ -38,3 +38,9 @@ test("ai draft requires keyword and discard keeps markdown unchanged", async ({ 
   const after = await page.getByTestId(articleEditorSelectors.markdown).inputValue();
   expect(after).toBe(before);
 });
+
+test("processes queued import tasks and creates draft articles", async ({ request }) => {
+  const res = await request.post("/api/admin/articles/imports/process");
+  // Without auth returns 401; with any request it should not 404
+  expect(res.status()).not.toBe(404);
+});

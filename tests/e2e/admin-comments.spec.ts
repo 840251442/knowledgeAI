@@ -105,3 +105,24 @@ test("admin can filter comments by article and delete", async ({ page }) => {
   await deleteResponsePromise;
   await expect(row).toHaveCount(0, { timeout: 30_000 });
 });
+
+test("rejects when upload count is greater than five", async ({ page }) => {
+  await loginAsAdmin(page);
+
+  const result = await page.evaluate(async () => {
+    const form = new FormData();
+    for (let i = 0; i < 6; i++) {
+      form.append("files", new File([`# doc ${i}`], `file-${i}.md`, { type: "text/markdown" }));
+    }
+    const response = await fetch(new URL("/api/admin/articles/import", window.location.origin).toString(), {
+      method: "POST",
+      body: form,
+    });
+    return { status: response.status, body: await response.json() };
+  });
+
+  expect(result.status).toBe(400);
+  const json = result.body as { success: boolean; error?: { code?: string } };
+  expect(json.success).toBeFalsy();
+  expect(json.error?.code).toBe("IMPORT_FILE_COUNT_INVALID");
+});

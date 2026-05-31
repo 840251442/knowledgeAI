@@ -99,7 +99,7 @@ git commit -m "feat: add article import task schema"
 - Modify: `src/services/ai-article-agent.service.ts`
 - Test: `tests/e2e/article-index-observability.spec.ts`
 
-- [ ] **Step 1: Write failing test for file type model routing**
+- [x] **Step 1: Write failing test for file type model routing**
 
 ```typescript
 it("routes parser model by file type", async () => {
@@ -147,7 +147,7 @@ export async function parseImportFile(input: ParseInput): Promise<ParseOutput> {
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/services/article-import-parse.service.ts src/config/ai.ts src/services/ai-article-agent.service.ts tests/e2e/article-index-observability.spec.ts
@@ -162,7 +162,7 @@ git commit -m "feat: add import parser model routing"
 - Create: `src/lib/security/file-upload.ts`
 - Test: `tests/e2e/admin-comments.spec.ts`
 
-- [ ] **Step 1: Write failing test for max-5 upload guard**
+- [x] **Step 1: Write failing test for max-5 upload guard**
 
 ```typescript
 it("rejects when upload count is greater than five", async ({ request }) => {
@@ -201,7 +201,7 @@ await prisma.$transaction(async (tx) => {
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/services/article-import.service.ts src/services/admin-article.service.ts src/lib/security/file-upload.ts tests/e2e/admin-comments.spec.ts
@@ -217,7 +217,7 @@ git commit -m "feat: add import task service and queue transitions"
 - Modify: `src/lib/api/response.ts`
 - Test: `tests/e2e/public-article-comments.spec.ts`
 
-- [ ] **Step 1: Write failing API test for import list visibility rule**
+- [x] **Step 1: Write failing API test for import list visibility rule**
 
 ```typescript
 it("returns only own import tasks for personal user", async ({ request }) => {
@@ -253,7 +253,7 @@ const retried = await retryImportTask({ taskId, actor });
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/api/admin/articles/import/route.ts src/app/api/admin/articles/imports/route.ts src/app/api/admin/articles/imports/[taskId]/retry/route.ts src/lib/api/response.ts tests/e2e/public-article-comments.spec.ts
@@ -268,7 +268,7 @@ git commit -m "feat: add import upload list and retry apis"
 - Modify: `src/services/admin-article.service.ts`
 - Test: `tests/e2e/auth-role-review.spec.ts`
 
-- [ ] **Step 1: Write failing test for publish idempotency**
+- [x] **Step 1: Write failing test for publish idempotency**
 
 ```typescript
 it("blocks duplicate publish when article is already published", async ({ request }) => {
@@ -301,7 +301,7 @@ return apiOk({ items: queue });
 Run: `npm run lint && npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/api/admin/reviews/queue/route.ts src/services/review.service.ts src/services/admin-article.service.ts tests/e2e/auth-role-review.spec.ts
@@ -318,7 +318,7 @@ git commit -m "feat: add review queue api and publish state guards"
 - Modify: `src/app/globals.css`
 - Test: `tests/e2e/admin-auth.spec.ts`
 
-- [ ] **Step 1: Write failing e2e test for import button and list navigation**
+- [x] **Step 1: Write failing e2e test for import button and list navigation**
 
 ```typescript
 it("shows import button and navigates to import list", async ({ page }) => {
@@ -348,12 +348,12 @@ Expected: FAIL - entry missing
 <Button data-testid="import-task-retry" disabled={task.status !== "FAILED"}>重试</Button>
 ```
 
-- [ ] **Step 5: Run UI e2e subset + lint/typecheck**
+- [x] **Step 5: Run UI e2e subset + lint/typecheck**
 
 Run: `npm run test:e2e -- tests/e2e/admin-auth.spec.ts`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/admin/articles/page.tsx src/app/admin/articles/imports/page.tsx src/app/admin/reviews/page.tsx src/components/admin/ArticleImportPanel.tsx src/app/globals.css tests/e2e/admin-auth.spec.ts
@@ -369,7 +369,7 @@ git commit -m "feat: add admin import and review pages"
 - Modify: `README.md`
 - Test: `tests/e2e/admin-ai-draft.spec.ts`
 
-- [ ] **Step 1: Write failing smoke test for async processing endpoint**
+- [x] **Step 1: Write failing smoke test for async processing endpoint**
 
 ```typescript
 it("processes queued import tasks and creates draft articles", async ({ request }) => {
@@ -383,7 +383,7 @@ it("processes queued import tasks and creates draft articles", async ({ request 
 Run: `npm run test:e2e -- tests/e2e/admin-ai-draft.spec.ts --grep "queued import tasks"`
 Expected: FAIL - endpoint missing
 
-- [ ] **Step 3: Implement processing endpoint + probe script**
+- [x] **Step 3: Implement processing endpoint + probe script**
 
 ```typescript
 export async function POST() {
@@ -392,19 +392,19 @@ export async function POST() {
 }
 ```
 
-- [ ] **Step 4: Add npm script and README usage docs**
+- [x] **Step 4: Add npm script and README usage docs**
 
 Run: `npm pkg set scripts.probe:import="tsx scripts/probe-import-pipeline.ts"`
 Expected: `package.json` contains probe script and README documents upload/processing flow
 
-- [ ] **Step 5: Run acceptance verification commands**
+- [x] **Step 5: Run acceptance verification commands**
 
 Run: `npm run lint && npm run typecheck`
 Run: `npm run test:e2e -- tests/e2e/admin-auth.spec.ts tests/e2e/auth-role-review.spec.ts tests/e2e/admin-ai-draft.spec.ts`
 Run: `npm run probe:import`
 Expected: 支持模拟 pdf/image/doc/txt 导入并成功新增草稿文章
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/api/internal/import-tasks/process/route.ts scripts/probe-import-pipeline.ts package.json README.md tests/e2e/admin-ai-draft.spec.ts
@@ -417,24 +417,24 @@ git commit -m "feat: add async import processor and acceptance probes"
 - Modify: `docs/records/non-upgrade-changelog.md`
 - Modify: `docs/superpowers/work-progress/admin-article-import-async-review/progress.md`
 
-- [ ] **Step 1: Record verified/unverified items with evidence**
+- [x] **Step 1: Record verified/unverified items with evidence**
 
 ```markdown
 - Verified: 上传 4 种文件导入成功（命令 + 结果）
 - Unverified: 高并发 100 文件压测未执行
 ```
 
-- [ ] **Step 2: Update changelog and progress evidence section**
+- [x] **Step 2: Update changelog and progress evidence section**
 
 Run: `git diff -- docs/records/non-upgrade-changelog.md docs/superpowers/work-progress/admin-article-import-async-review/progress.md`
 Expected: 包含功能点、验证命令、结果摘要
 
-- [ ] **Step 3: Final gate checks**
+- [x] **Step 3: Final gate checks**
 
 Run: `npm run lint && npm run typecheck && npm run test:e2e -- tests/e2e/admin-auth.spec.ts tests/e2e/auth-role-review.spec.ts`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/records/non-upgrade-changelog.md docs/superpowers/work-progress

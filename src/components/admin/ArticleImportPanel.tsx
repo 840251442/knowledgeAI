@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Select } from "antd";
 
 import type { ArticleImportTaskItem, ArticleImportTaskStatus } from "@/types/article";
-import { apiRequest } from "./adminApi";
+import { apiRequest, authFetch } from "./adminApi";
 
 type ImportTaskListResponse = {
   page: number;
@@ -13,6 +13,22 @@ type ImportTaskListResponse = {
   status: ArticleImportTaskStatus | null;
   items: ArticleImportTaskItem[];
 };
+
+type UploadResult = {
+  queued: number;
+  taskIds: string[];
+};
+
+const ACCEPTED_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "text/plain",
+  "text/markdown",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+].join(",");
 
 const STATUS_OPTIONS: Array<{ value: "ALL" | ArticleImportTaskStatus; label: string }> = [
   { value: "ALL", label: "全部状态" },
@@ -23,19 +39,19 @@ const STATUS_OPTIONS: Array<{ value: "ALL" | ArticleImportTaskStatus; label: str
   { value: "FAILED", label: "失败" },
 ];
 
-function statusLabel(status: ArticleImportTaskStatus) {
-  if (status === "QUEUED") return "排队中";
-  if (status === "PROCESSING") return "处理中";
-  if (status === "RETRYING") return "重试中";
-  if (status === "SUCCEEDED") return "成功";
-  if (status === "FAILED") return "失败";
-  return status;
+function statusLabel(s: ArticleImportTaskStatus) {
+  if (s === "QUEUED") return "排队中";
+  if (s === "PROCESSING") return "处理中";
+  if (s === "RETRYING") return "重试中";
+  if (s === "SUCCEEDED") return "成功";
+  if (s === "FAILED") return "失败";
+  return s;
 }
 
-function statusDotClass(status: ArticleImportTaskStatus) {
-  if (status === "SUCCEEDED") return "dot dotGreen";
-  if (status === "FAILED") return "dot dotWarn";
-  if (status === "PROCESSING" || status === "RETRYING") return "dot dotCyan";
+function statusDotClass(s: ArticleImportTaskStatus) {
+  if (s === "SUCCEEDED") return "dot dotGreen";
+  if (s === "FAILED") return "dot dotWarn";
+  if (s === "PROCESSING" || s === "RETRYING") return "dot dotCyan";
   return "dot dotBrand";
 }
 
@@ -53,6 +69,13 @@ export default function ArticleImportPanel(props: {
   const [pageSize, setPageSize] = useState(props.initialData?.pageSize ?? 20);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(props.initialError ?? null);
+
+  // upload state
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const mounted = useRef(false);
 
   const totalPages = useMemo(() => {
@@ -95,7 +118,6 @@ export default function ArticleImportPanel(props: {
       }
       void load({ page, pageSize, status });
     }, 0);
-
     return () => window.clearTimeout(timer);
   }, [load, page, pageSize, props.initialData, status]);
 
@@ -112,20 +134,135 @@ export default function ArticleImportPanel(props: {
     }
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    setUploadFiles(files);
+    setUploadMsg(null);
+  }
+
+  function clearFileSelection() {
+    setUploadFiles([]);
+    setUploadMsg(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleUpload() {
+    if (uploadFiles.length === 0) return;
+    if (uploadFiles.length > 5) {
+      setUploadMsg({ type: "err", text: "单次最多上传 5 个文件" });
+      return;
+    }
+
+    setUploading(true);
+    setUploadMsg(null);
+
+    try {
+      // Step 1: 上传文件入队
+      const form = new FormData();
+      for (const f of uploadFiles) form.append("files", f);
+
+      const uploadRes = await authFetch("/api/admin/articles/import", { method: "POST", body: form });
+      if (!uploadRes.ok) {
+        const json = await uploadRes.json().catch(() => null) as { error?: { message?: string } } | null;
+        const msg = json?.error?.message ?? `上传失败 (${uploadRes.status})`;
+        setUploadMsg({ type: "err", text: msg });
+        return;
+      }
+      const uploadJson = await uploadRes.json() as { success: boolean; data: UploadResult };
+      const queued = uploadJson.success ? uploadJson.data.queued : 0;
+
+      // Step 2: 触发批量解析
+      const processRes = await authFetch("/api/admin/articles/imports/process", { method: "POST" });
+      const processJson = await processRes.json().catch(() => null) as { data?: { processed?: number } } | null;
+      const processed = processJson?.data?.processed ?? 0;
+
+      setUploadMsg({
+        type: "ok",
+        text: `已入队 ${queued} 个任务，本次处理 ${processed} 个，稍后刷新可查看结果`,
+      });
+      clearFileSelection();
+      // 刷新任务列表
+      await load({ page: 1, pageSize, status }, { keepBusy: true });
+      setPage(1);
+    } catch (e) {
+      setUploadMsg({ type: "err", text: e instanceof Error ? e.message : "上传失败" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const isUploading = uploading;
+  const isBusy = busy || isUploading;
+
   return (
     <div className="panel adminImportsPanel" data-testid="admin-import-panel">
       <div className="panelHeader">
         <div className="panelTitle">
           <strong>导入任务</strong>
-          <span>查看解析进度、失败原因并支持重试</span>
+          <span>上传文件自动解析为草稿，支持 PDF / 图片 / Word / TXT</span>
         </div>
         <div className="actions">
           <span className="badge">共 {data?.total ?? 0} 个任务</span>
         </div>
       </div>
 
+      {/* ── 上传区 ── */}
+      <div className="subPanel">
+        <div className="subPanelHeader">
+          <strong>上传文件</strong>
+          <span className="subMuted">单次最多 5 个，支持 pdf / png / jpg / webp / txt / md / doc / docx</span>
+        </div>
+        <div className="gridForm">
+          <div className="field" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            {/* 隐藏的 file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPTED_TYPES}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+              data-testid="import-file-input"
+            />
+            <Button
+              className="btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              data-testid="import-choose-files"
+            >
+              选择文件
+            </Button>
+            {uploadFiles.length > 0 && (
+              <span className="subMuted" style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                已选 {uploadFiles.length} 个：{uploadFiles.map((f) => f.name).join("、")}
+              </span>
+            )}
+            {uploadFiles.length > 0 && (
+              <Button className="btn" onClick={clearFileSelection} disabled={isUploading}>
+                清除
+              </Button>
+            )}
+            <Button
+              className="btn btnGreen"
+              type="primary"
+              disabled={uploadFiles.length === 0 || isUploading}
+              onClick={() => void handleUpload()}
+              data-testid="import-upload-submit"
+            >
+              {isUploading ? "上传中…" : "上传并解析"}
+            </Button>
+          </div>
+        </div>
+        {uploadMsg && (
+          <div className={uploadMsg.type === "ok" ? "successBox" : "errorBox"} style={{ margin: "0 0 4px" }}>
+            {uploadMsg.text}
+          </div>
+        )}
+      </div>
+
       {error ? <div className="errorBox">{error}</div> : null}
 
+      {/* ── 筛选区 ── */}
       <div className="subPanel">
         <div className="subPanelHeader">
           <strong>筛选</strong>
@@ -143,14 +280,14 @@ export default function ArticleImportPanel(props: {
                 setStatus(nextStatus);
                 setPage(1);
               }}
-              disabled={busy}
+              disabled={isBusy}
               data-testid="import-task-filter-status"
-            >
-            </Select>
+            />
           </div>
         </div>
       </div>
 
+      {/* ── 任务列表 ── */}
       <div className="tableWrap">
         <div className="tableHeader adminImportTableHeader">
           <div>任务</div>
@@ -185,7 +322,7 @@ export default function ArticleImportPanel(props: {
               <div className="cell cellActions">
                 <Button
                   className="btn"
-                  disabled={busy || !canRetry}
+                  disabled={isBusy || !canRetry}
                   onClick={() => void retryTask(task.id)}
                   data-testid="import-task-retry"
                 >
@@ -196,24 +333,22 @@ export default function ArticleImportPanel(props: {
           );
         })}
 
-        {!busy && data && data.items.length === 0 ? <div className="emptyLine">暂无导入任务</div> : null}
+        {!isBusy && data && data.items.length === 0 ? <div className="emptyLine">暂无导入任务</div> : null}
       </div>
 
       <div className="pager">
         <div className="pagerLeft">
-          <Button className="btn" disabled={busy || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+          <Button className="btn" disabled={isBusy || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
             上一页
           </Button>
           <Button
             className="btn"
-            disabled={busy || page >= totalPages}
+            disabled={isBusy || page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           >
             下一页
           </Button>
-          <span className="subMuted">
-            第 {page} / {totalPages} 页
-          </span>
+          <span className="subMuted">第 {page} / {totalPages} 页</span>
         </div>
         <div className="pagerRight">
           <span className="subMuted">每页</span>
@@ -225,14 +360,13 @@ export default function ArticleImportPanel(props: {
               setPageSize(Number.isFinite(next) ? next : 20);
               setPage(1);
             }}
-            disabled={busy}
+            disabled={isBusy}
             options={[
               { value: "10", label: "10" },
               { value: "20", label: "20" },
               { value: "50", label: "50" },
             ]}
-          >
-          </Select>
+          />
         </div>
       </div>
     </div>
