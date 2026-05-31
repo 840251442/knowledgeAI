@@ -39,3 +39,8 @@
   - **F1 主修复**（`src/app/api/auth/refresh/route.ts`）：调用 `createSessionToken` + `getSessionCookieName`，在 token 刷新成功后同步颁发新的 session cookie，与登录流程保持一致。
   - **F2 兜底修复**（`src/app/admin/login/page.tsx`）：`ensureSession` 中 refresh 成功后不直接跳转，先执行 `probeAdminSession()` 确认 session 可用；probe 失败则 `clearAuthSession()` 并展示登录表单，不再循环。若自动登录失败（refresh 或 probe 均失败），清除 localStorage 登录记忆。
   - **验证**：`npx tsc --noEmit` 通过，无 TS 错误。
+
+## 2026-05-31 (bugfix/260531 续)
+
+- 移除 `.subPanel, .tableWrap, .pane, .aiPanel` 的 `overflow: hidden`，允许内容溢出（`src/app/admin/admin.css`）。
+- 修复 `/api/admin/articles/import` 500 错误：Vercel serverless 环境下 `process.cwd()/.cache/imports` 只读，`mkdir + writeFile` 抛 EACCES。改为将文件内容存入数据库 `fileContent Bytes?` 字段，彻底去除文件系统依赖；新增迁移 `20260531100000_article_import_file_content`（`ALTER TABLE "ArticleImportTask" ADD COLUMN "fileContent" BYTEA`）。验证：`tsc --noEmit` 通过。
