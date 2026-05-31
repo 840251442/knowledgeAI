@@ -510,13 +510,10 @@
   padding: 24px;
 }
 
-.adminArticlesPanel {
-  overflow: hidden;
-}
-
+.adminArticlesPanel,
 .adminImportsPanel,
 .adminReviewsPanel {
-  overflow: hidden;
+  overflow: auto;
 }
 
 .importUploadZone {
