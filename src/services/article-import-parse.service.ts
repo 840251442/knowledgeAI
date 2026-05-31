@@ -116,6 +116,12 @@ async function callVisionModel(input: { model: string; fileType: string; base64:
  * pdf-parse 是 CJS 模块，dynamic import 返回 { default: fn }。
  */
 async function parsePdf(buffer: Buffer): Promise<string> {
+  // Polyfill DOM APIs required by pdfjs-dist in Node.js/serverless environments.
+  // pdfjs-dist references DOMMatrix and Path2D even during text-only extraction.
+  if (typeof globalThis.DOMMatrix === "undefined") {
+    const stub = class {};
+    Object.assign(globalThis, { DOMMatrix: stub, Path2D: stub });
+  }
   type PdfParseFn = (buf: Buffer) => Promise<{ text: string }>;
   const mod = (await import("pdf-parse")) as unknown as { default: PdfParseFn } | PdfParseFn;
   const fn: PdfParseFn =

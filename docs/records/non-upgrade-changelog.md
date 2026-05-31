@@ -51,3 +51,35 @@
 - 强化 `project-rules.instructions.md`：新增"Agent 执行强制检查清单"章节，要求每次改动结束前必须按序完成：写 changelog → 检查 README → 同批 commit → 回复确认，违反任意一条视为任务未完成。
 - 修复 CI lint 失败：去除 `article-import-parse.service.ts` 中两行无效的 `eslint-disable-next-line @typescript-eslint/no-require-imports` 注释（该规则在 `eslint-config-next` 中不存在，成为多余指令触发警告）。验证：`npx eslint src/services/article-import-parse.service.ts --max-warnings 0` 通过。
 - 修复 Vercel 构建崩溃（`Failed to collect page data for /api/admin/articles/import`）：`pdf-parse` 顶层 `require` 在 Next.js 构建阶段会立即读取内部测试文件导致崩溃；改为函数内部 `await import("pdf-parse")` 懒加载。同步修正 mammoth 用法：`convertToMarkdown` 不存在于 mammoth API，改为 `extractRawText` 提取纯文本再送 AI 整理为 Markdown。验证：`tsc --noEmit` 无本文件错误，`eslint` 通过。
+
+## 2026-05-31
+
+### [bugfix/260531-ui] Task A - 侧边栏导入管理入口 + 文章列表头部清理
+
+**改动内容：**
+- `src/app/admin/layout.tsx`：在"文章管理"后插入"导入管理"NavLink（`/admin/articles/imports`），ADMIN 和 PERSONAL 均可见；修正"文章管理" active 条件避免双高亮
+- `src/app/admin/articles/page.tsx`：移除"导入任务"按钮（入口已移至侧边栏）；"审核列表"按钮改为仅 ADMIN 可见
+
+**验证：** `npx tsc --noEmit` 无新增错误，`npx eslint` 无错误
+
+### [bugfix/260531-ui] Task B - PERSONAL 用户可删除草稿文章
+
+**改动内容：**
+- `src/app/admin/articles/page.tsx`：新增 `deleteAction` server action；导入 `deleteAdminArticle`；在草稿文章行显示"删除"按钮
+- `src/components/admin/ArticleEditor.tsx`：编辑页删除按钮显示条件从 `PUBLISHED` 扩展为 `PUBLISHED || DRAFT`；下线按钮保持仅 `PUBLISHED` 状态
+
+**验证：** tsc/ESLint 无新增错误（预存三方库类型缺失不影响）
+
+### [bugfix/260531-ui] Task C - 修复编辑器左右两栏 1:1
+
+**改动内容：**
+- `src/app/admin/admin.css`：给 `.pane` 补加 `min-width: 0; overflow: hidden`
+
+**根因：** CSS Grid `1fr 1fr` 在子项缺少 `min-width: 0` 时，MDEditor 内部最小宽度会撑开左列超过 50%，导致视觉上不是 1:1
+
+### [bugfix/260531-ui] Task D - PDF 解析 DOMMatrix polyfill
+
+**改动内容：**
+- `src/services/article-import-parse.service.ts`：`parsePdf()` 内调用 pdf-parse 前注入最小化 polyfill，将 `DOMMatrix`/`Path2D` 设为空 class stub
+
+**根因：** `pdfjs-dist`（pdf-parse 依赖）在文字提取时调用 `DOMMatrix`/`Path2D` 等浏览器 Canvas API，Node.js/Serverless 环境不存在这些全局变量，导致解析崩溃
