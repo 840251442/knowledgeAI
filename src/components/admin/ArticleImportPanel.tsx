@@ -212,31 +212,41 @@ export default function ArticleImportPanel(props: {
           <strong>上传文件</strong>
           <span className="subMuted">单次最多 5 个，支持 pdf / png / jpg / webp / txt / md / doc / docx</span>
         </div>
-        <div className="gridForm">
-          <div className="field" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            {/* 隐藏的 file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept={ACCEPTED_TYPES}
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-              data-testid="import-file-input"
-            />
+        <div className="importUploadZone">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={ACCEPTED_TYPES}
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+            data-testid="import-file-input"
+          />
+          {uploadFiles.length === 0 ? (
+            <div className="importDropHint">
+              <span className="importDropIcon">📂</span>
+              <span className="subMuted">还没有选择文件</span>
+            </div>
+          ) : (
+            <ul className="importFileList">
+              {uploadFiles.map((f) => (
+                <li key={f.name} className="importFileItem">
+                  <span className="importFileIcon">📄</span>
+                  <span className="importFileName">{f.name}</span>
+                  <span className="subMuted importFileSize">{Math.ceil(f.size / 1024)} KB</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="importUploadActions">
             <Button
               className="btn"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               data-testid="import-choose-files"
             >
-              选择文件
+              {uploadFiles.length > 0 ? `重新选择（已选 ${uploadFiles.length} 个）` : "选择文件"}
             </Button>
-            {uploadFiles.length > 0 && (
-              <span className="subMuted" style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                已选 {uploadFiles.length} 个：{uploadFiles.map((f) => f.name).join("、")}
-              </span>
-            )}
             {uploadFiles.length > 0 && (
               <Button className="btn" onClick={clearFileSelection} disabled={isUploading}>
                 清除
@@ -254,7 +264,7 @@ export default function ArticleImportPanel(props: {
           </div>
         </div>
         {uploadMsg && (
-          <div className={uploadMsg.type === "ok" ? "successBox" : "errorBox"} style={{ margin: "0 0 4px" }}>
+          <div className={uploadMsg.type === "ok" ? "successBox" : "errorBox"} style={{ margin: "0 16px 12px" }}>
             {uploadMsg.text}
           </div>
         )}
