@@ -22,7 +22,7 @@ function whereForActor(actor: ArticleActor) {
 async function assertArticleAccessible(id: string, actor: ArticleActor) {
   const article = await prisma.article.findUnique({
     where: { id },
-    select: { id: true, slug: true, personalAuthorId: true },
+    select: { id: true, slug: true, status: true, personalAuthorId: true },
   });
 
   if (!article) throw new Error("ARTICLE_NOT_FOUND");
@@ -227,7 +227,14 @@ export async function deleteAdminArticle(id: string, actor: ArticleActor) {
 }
 
 export async function publishAdminArticle(id: string, actor: ArticleActor) {
-  await assertArticleAccessible(id, actor);
+  const before = await assertArticleAccessible(id, actor);
+  if (before.status === "PUBLISHED") {
+    throw new Error("ARTICLE_ALREADY_PUBLISHED");
+  }
+  if (before.status === "PENDING_REVIEW") {
+    throw new Error("ARTICLE_ALREADY_PENDING");
+  }
+
   const updated = await prisma.article.update({
     where: { id },
     data: { status: "PUBLISHED", publishedAt: new Date() },
@@ -250,7 +257,11 @@ export async function publishAdminArticle(id: string, actor: ArticleActor) {
 }
 
 export async function unpublishAdminArticle(id: string, actor: ArticleActor) {
-  await assertArticleAccessible(id, actor);
+  const before = await assertArticleAccessible(id, actor);
+  if (before.status !== "PUBLISHED") {
+    throw new Error("ARTICLE_ALREADY_DRAFT");
+  }
+
   const updated = await prisma.article.update({
     where: { id },
     data: { status: "DRAFT", publishedAt: null },

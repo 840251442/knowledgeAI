@@ -1,18 +1,46 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { Button } from "antd";
 
 import { requireRole } from "@/lib/auth/require-role";
-import { listAdminArticles } from "@/services/admin-article.service";
+import { listAdminArticles, publishAdminArticle, unpublishAdminArticle } from "@/services/admin-article.service";
 
 export const dynamic = "force-dynamic";
 
 function getStatusLabel(status: string) {
   if (status === "PUBLISHED") return "已发布";
   if (status === "DRAFT") return "草稿";
+  if (status === "PENDING_REVIEW") return "待审核";
   return status;
 }
 
 export default async function AdminArticlesPage() {
+  async function publishAction(formData: FormData) {
+    "use server";
+
+    const id = String(formData.get("id") ?? "").trim();
+    if (!id) return;
+
+    const actor = await requireRole(["ADMIN", "PERSONAL"]);
+    if (!actor) redirect("/admin/login");
+
+    await publishAdminArticle(id, { id: actor.id, role: actor.role });
+    revalidatePath("/admin/articles");
+  }
+
+  async function unpublishAction(formData: FormData) {
+    "use server";
+
+    const id = String(formData.get("id") ?? "").trim();
+    if (!id) return;
+
+    const actor = await requireRole(["ADMIN", "PERSONAL"]);
+    if (!actor) redirect("/admin/login");
+
+    await unpublishAdminArticle(id, { id: actor.id, role: actor.role });
+    revalidatePath("/admin/articles");
+  }
+
   const user = await requireRole(["ADMIN", "PERSONAL"]);
   if (!user) redirect("/admin/login");
 
@@ -46,6 +74,12 @@ export default async function AdminArticlesPage() {
             <span>草稿/发布状态、编辑与发布操作</span>
           </div>
           <div className="actions">
+            <Button className="btn" href="/admin/articles/imports" data-testid="admin-import-entry">
+              导入任务
+            </Button>
+            <Button className="btn" href="/admin/reviews">
+              审核列表
+            </Button>
             <Button className="btn btnGreen" href="/admin/articles/new" type="primary">
               新建文章
             </Button>
@@ -89,7 +123,15 @@ export default async function AdminArticlesPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                       <strong style={{ fontSize: 14 }}>{item.title}</strong>
                       <span className="badge">
-                        <span className={item.status === "PUBLISHED" ? "dot dotGreen" : "dot dotWarn"} />
+                        <span
+                          className={
+                            item.status === "PUBLISHED"
+                              ? "dot dotGreen"
+                              : item.status === "PENDING_REVIEW"
+                                ? "dot dotCyan"
+                                : "dot dotWarn"
+                          }
+                        />
                         {getStatusLabel(item.status)}
                       </span>
                     </div>
@@ -101,16 +143,22 @@ export default async function AdminArticlesPage() {
                     <Button className="btn" href={`/admin/articles/${item.id}/edit`}>
                       编辑
                     </Button>
-                    {item.status === "PUBLISHED" ? (
-                      <Button className="btn btnPrimary" href={`/admin/articles/${item.id}`} type="primary">
-                        详情
+                    <form action={publishAction}>
+                      <input type="hidden" name="id" value={item.id} />
+                      <Button
+                        className="btn"
+                        htmlType="submit"
+                        disabled={item.status === "PUBLISHED" || item.status === "PENDING_REVIEW"}
+                      >
+                        发布
                       </Button>
-                    ) : (
-                      <span className="badge">
-                        <span className="dot dotWarn" />
-                        未发布
-                      </span>
-                    )}
+                    </form>
+                    <form action={unpublishAction}>
+                      <input type="hidden" name="id" value={item.id} />
+                      <Button className="btn" htmlType="submit" disabled={item.status !== "PUBLISHED"}>
+                        下线
+                      </Button>
+                    </form>
                   </div>
                 </div>
               ))}

@@ -61,6 +61,14 @@ enum EmbeddingTaskStatus {
   FAILED
 }
 
+enum ArticleImportTaskStatus {
+  QUEUED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  RETRYING
+}
+
 enum SearchQueryType {
   KEYWORD
   SEMANTIC
@@ -134,6 +142,7 @@ model Article {
   tags            ArticleTag[]
   chunks          ArticleChunk[]
   embeddingTasks  EmbeddingTask[]
+  importTasks     ArticleImportTask[]
   reviews         ArticleReview[]
   comments        Comment[]
   topSearchLogs   SearchLog[]      @relation("SearchLogTopArticle")
@@ -239,6 +248,35 @@ model EmbeddingTask {
 
   @@index([articleId, status])
   @@index([createdAt])
+}
+
+model ArticleImportTask {
+  id            String                  @id @default(cuid())
+  uploaderRole  UserRole
+  uploaderId    String
+  fileName      String                  @db.VarChar(255)
+  fileType      String                  @db.VarChar(100)
+  fileSize      Int
+  storagePath   String                  @db.VarChar(500)
+  status        ArticleImportTaskStatus @default(QUEUED)
+  parseModel    String?                 @db.VarChar(100)
+  parsedTitle   String?                 @db.VarChar(200)
+  parsedSummary String?                 @db.VarChar(500)
+  parsedContent String?                 @db.Text
+  articleId     String?
+  errorCode     String?                 @db.VarChar(100)
+  errorMessage  String?                 @db.VarChar(500)
+  retryCount    Int                     @default(0)
+  maxRetries    Int                     @default(3)
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  article       Article?                @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  @@index([uploaderRole, uploaderId, createdAt])
+  @@index([status, updatedAt])
+  @@index([articleId])
 }
 
 model SearchLog {

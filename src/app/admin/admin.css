@@ -515,6 +515,34 @@
   overflow: hidden;
 }
 
+.adminImportsPanel,
+.adminReviewsPanel {
+  overflow: hidden;
+}
+
+.adminImportTableHeader,
+.adminImportTableRow {
+  grid-template-columns: minmax(240px, 1.6fr) minmax(140px, 0.9fr) minmax(180px, 1fr) minmax(220px, 1.4fr) minmax(120px, 0.8fr);
+}
+
+.adminImportErrorText,
+.adminReviewReason {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.55;
+}
+
+.adminReviewsTableWrap {
+  margin: 16px;
+}
+
+.adminReviewTableHeader,
+.adminReviewTableRow {
+  grid-template-columns: minmax(220px, 1.5fr) minmax(140px, 0.9fr) minmax(220px, 1.1fr) minmax(260px, 1.5fr) minmax(180px, 1fr);
+}
+
 .adminArticlesBody {
   flex: 1;
   min-height: 0;
@@ -872,5 +900,12 @@
 
   .subGrid {
     padding: 16px;
+  }
+
+  .adminImportTableHeader,
+  .adminImportTableRow,
+  .adminReviewTableHeader,
+  .adminReviewTableRow {
+    grid-template-columns: 1fr;
   }
 }

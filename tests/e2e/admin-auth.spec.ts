@@ -46,6 +46,18 @@ test("admin session survives visiting public site", async ({ page }) => {
   await expect(page.getByRole("link", { name: "新建文章", exact: true })).toBeVisible();
 });
 
+test("admin articles page exposes import and review entries", async ({ page }) => {
+  await loginAsAdmin(page);
+
+  await page.getByTestId("admin-import-entry").click();
+  await expect(page).toHaveURL(/\/admin\/articles\/imports$/);
+
+  await page.goto("/admin/articles");
+  await expect(page.getByRole("link", { name: "审核列表", exact: true })).toBeVisible();
+  await page.goto("/admin/reviews");
+  await expect(page).toHaveURL(/\/admin\/reviews$/);
+});
+
 test("register tab can create personal account and enter admin articles", async ({ page }) => {
   const email = `admin-tab-register-${Date.now()}@knowledgeai.dev`;
   const password = "Writer#123456";
