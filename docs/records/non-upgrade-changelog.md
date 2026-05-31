@@ -69,3 +69,10 @@
 - `src/components/admin/ArticleEditor.tsx`：编辑页删除按钮显示条件从 `PUBLISHED` 扩展为 `PUBLISHED || DRAFT`；下线按钮保持仅 `PUBLISHED` 状态
 
 **验证：** tsc/ESLint 无新增错误（预存三方库类型缺失不影响）
+
+### [bugfix/260531-ui] Task C - 修复编辑器左右两栏 1:1
+
+**改动内容：**
+- `src/app/admin/admin.css`：给 `.pane` 补加 `min-width: 0; overflow: hidden`
+
+**根因：** CSS Grid `1fr 1fr` 在子项缺少 `min-width: 0` 时，MDEditor 内部最小宽度会撑开左列超过 50%，导致视觉上不是 1:1
