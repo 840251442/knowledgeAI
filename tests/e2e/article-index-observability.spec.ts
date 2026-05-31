@@ -227,3 +227,32 @@ test("publish/update/manual should produce corresponding index tasks", async ({ 
     (status) => status.latestTask?.taskType === "MANUAL" && status.latestTask.status === "SUCCESS" && status.state === "success",
   );
 });
+
+test("import api rejects unsupported file type with UNSUPPORTED_FILE_TYPE error code", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(async () => {
+    const response = await fetch(new URL("/api/admin/login", window.location.origin).toString(), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: "admin@knowledgeai.dev", password: "dev" }),
+    });
+    return response.ok;
+  });
+
+  const result = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append("files", new File(["binary"], "virus.exe", { type: "application/x-msdownload" }));
+
+    const response = await fetch(new URL("/api/admin/articles/import", window.location.origin).toString(), {
+      method: "POST",
+      body: form,
+    });
+    return { status: response.status, body: await response.json() };
+  });
+
+  // Unsupported file is queued as FAILED task (UNSUPPORTED_FILE_TYPE), not a hard 400
+  const json = result.body as { success: boolean; data?: { items?: Array<{ errorCode: string | null }> } };
+  expect(json.success).toBeTruthy();
+  const task = json.data?.items?.[0];
+  expect(task?.errorCode).toBe("UNSUPPORTED_FILE_TYPE");
+});

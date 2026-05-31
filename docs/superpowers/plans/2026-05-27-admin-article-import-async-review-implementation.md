@@ -99,7 +99,7 @@ git commit -m "feat: add article import task schema"
 - Modify: `src/services/ai-article-agent.service.ts`
 - Test: `tests/e2e/article-index-observability.spec.ts`
 
-- [ ] **Step 1: Write failing test for file type model routing**
+- [x] **Step 1: Write failing test for file type model routing**
 
 ```typescript
 it("routes parser model by file type", async () => {
@@ -162,7 +162,7 @@ git commit -m "feat: add import parser model routing"
 - Create: `src/lib/security/file-upload.ts`
 - Test: `tests/e2e/admin-comments.spec.ts`
 
-- [ ] **Step 1: Write failing test for max-5 upload guard**
+- [x] **Step 1: Write failing test for max-5 upload guard**
 
 ```typescript
 it("rejects when upload count is greater than five", async ({ request }) => {
@@ -217,7 +217,7 @@ git commit -m "feat: add import task service and queue transitions"
 - Modify: `src/lib/api/response.ts`
 - Test: `tests/e2e/public-article-comments.spec.ts`
 
-- [ ] **Step 1: Write failing API test for import list visibility rule**
+- [x] **Step 1: Write failing API test for import list visibility rule**
 
 ```typescript
 it("returns only own import tasks for personal user", async ({ request }) => {
@@ -268,7 +268,7 @@ git commit -m "feat: add import upload list and retry apis"
 - Modify: `src/services/admin-article.service.ts`
 - Test: `tests/e2e/auth-role-review.spec.ts`
 
-- [ ] **Step 1: Write failing test for publish idempotency**
+- [x] **Step 1: Write failing test for publish idempotency**
 
 ```typescript
 it("blocks duplicate publish when article is already published", async ({ request }) => {
@@ -318,7 +318,7 @@ git commit -m "feat: add review queue api and publish state guards"
 - Modify: `src/app/globals.css`
 - Test: `tests/e2e/admin-auth.spec.ts`
 
-- [ ] **Step 1: Write failing e2e test for import button and list navigation**
+- [x] **Step 1: Write failing e2e test for import button and list navigation**
 
 ```typescript
 it("shows import button and navigates to import list", async ({ page }) => {
@@ -369,7 +369,7 @@ git commit -m "feat: add admin import and review pages"
 - Modify: `README.md`
 - Test: `tests/e2e/admin-ai-draft.spec.ts`
 
-- [ ] **Step 1: Write failing smoke test for async processing endpoint**
+- [x] **Step 1: Write failing smoke test for async processing endpoint**
 
 ```typescript
 it("processes queued import tasks and creates draft articles", async ({ request }) => {
@@ -392,7 +392,7 @@ export async function POST() {
 }
 ```
 
-- [ ] **Step 4: Add npm script and README usage docs**
+- [x] **Step 4: Add npm script and README usage docs**
 
 Run: `npm pkg set scripts.probe:import="tsx scripts/probe-import-pipeline.ts"`
 Expected: `package.json` contains probe script and README documents upload/processing flow

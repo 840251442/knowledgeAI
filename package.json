@@ -23,7 +23,8 @@
     "ai:draft:probe": "tsx scripts/probe-ai-draft-stream.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "probe:import": "tsx scripts/probe-import-pipeline.ts"
   },
   "keywords": [],
   "license": "MIT",

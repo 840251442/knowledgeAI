@@ -134,3 +134,48 @@ test("public comments show guest and personal names", async ({ page }) => {
   await expect(page.getByText("游客")).toBeVisible();
   await expect(page.getByText(email)).toBeVisible();
 });
+
+test("returns only own import tasks for personal user", async ({ page }) => {
+  const stamp = Date.now();
+  const email = `import-personal-${stamp}@knowledgeai.dev`;
+  const password = "Writer#123456";
+
+  // register personal account
+  await page.goto("/");
+  const regResult = await page.evaluate(async ({ email, password }) => {
+    const res = await fetch(new URL("/api/auth/register", window.location.origin).toString(), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password, role: "PERSONAL" }),
+    });
+    return { ok: res.ok };
+  }, { email, password });
+  expect(regResult.ok).toBeTruthy();
+
+  // upload one file as personal user
+  const uploadResult = await page.evaluate(async ({ stamp }) => {
+    const form = new FormData();
+    form.append("files", new File([`# personal import ${stamp}`], `personal-${stamp}.md`, { type: "text/markdown" }));
+    const res = await fetch(new URL("/api/admin/articles/import", window.location.origin).toString(), {
+      method: "POST",
+      body: form,
+    });
+    return { ok: res.ok, status: res.status };
+  }, { stamp });
+  expect(uploadResult.ok).toBeTruthy();
+
+  // list import tasks - should only see own
+  const listResult = await page.evaluate(async () => {
+    const res = await fetch(new URL("/api/admin/articles/imports?page=1&pageSize=20", window.location.origin).toString());
+    return { ok: res.ok, status: res.status, body: await res.json() };
+  });
+  expect(listResult.ok).toBeTruthy();
+  expect(listResult.status).toBe(200);
+
+  const json = listResult.body as { success: boolean; data?: { items?: Array<{ uploaderId: string }> } };
+  expect(json.success).toBeTruthy();
+  // all returned tasks belong to the same user (no cross-user leakage)
+  const items = json.data?.items ?? [];
+  const uploaderIds = [...new Set(items.map((i) => i.uploaderId))];
+  expect(uploaderIds.length).toBeLessThanOrEqual(1);
+});
