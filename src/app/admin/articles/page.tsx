@@ -74,12 +74,11 @@ export default async function AdminArticlesPage() {
             <span>草稿/发布状态、编辑与发布操作</span>
           </div>
           <div className="actions">
-            <Button className="btn" href="/admin/articles/imports" data-testid="admin-import-entry">
-              导入任务
-            </Button>
-            <Button className="btn" href="/admin/reviews">
-              审核列表
-            </Button>
+            {user.role === "ADMIN" ? (
+              <Button className="btn" href="/admin/reviews">
+                审核列表
+              </Button>
+            ) : null}
             <Button className="btn btnGreen" href="/admin/articles/new" type="primary">
               新建文章
             </Button>
