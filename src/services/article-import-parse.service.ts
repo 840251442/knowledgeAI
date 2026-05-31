@@ -1,10 +1,5 @@
 import path from "node:path";
 
-const mammoth = require("mammoth") as {
-  convertToMarkdown: (input: { buffer: Buffer }) => Promise<{ value: string }>;
-};
-const pdfParse = require("pdf-parse") as (buffer: Buffer) => Promise<{ text: string }>;
-
 import OpenAI from "openai";
 
 import { aiConfig, requireAiConfig } from "@/config/ai";
@@ -65,7 +60,6 @@ export function selectImportModel(fileType: string) {
   throw new Error("UNSUPPORTED_FILE_TYPE");
 }
 
-/** 对纯文本内容调用 AI 做结构化整理（标题提取等可选扩展，当前直接透传） */
 async function callTextModel(input: { model: string; text: string }) {
   const client = buildExtractClient();
   const completion = await client.chat.completions.create({
@@ -89,7 +83,6 @@ async function callTextModel(input: { model: string; text: string }) {
   return normalizeText(raw);
 }
 
-/** 图片类型：用 vision model，base64 data URL 方式传图 */
 async function callVisionModel(input: { model: string; fileType: string; base64: string }) {
   const client = buildExtractClient();
   const completion = await client.chat.completions.create({
@@ -118,6 +111,29 @@ async function callVisionModel(input: { model: string; fileType: string; base64:
   return normalizeText(raw);
 }
 
+/**
+ * 懒加载 pdf-parse，避免顶层 require 在 Next.js 构建阶段读取测试文件导致崩溃。
+ * pdf-parse 是 CJS 模块，dynamic import 返回 { default: fn }。
+ */
+async function parsePdf(buffer: Buffer): Promise<string> {
+  type PdfParseFn = (buf: Buffer) => Promise<{ text: string }>;
+  const mod = (await import("pdf-parse")) as unknown as { default: PdfParseFn } | PdfParseFn;
+  const fn: PdfParseFn =
+    typeof mod === "function" ? mod : (mod as { default: PdfParseFn }).default;
+  const data = await fn(buffer);
+  return normalizeText(data.text);
+}
+
+/**
+ * 懒加载 mammoth，用 extractRawText 提取纯文本，再由 AI 整理为 Markdown。
+ * mammoth 没有 convertToMarkdown API，正确方法是 extractRawText。
+ */
+async function parseWordDoc(buffer: Buffer): Promise<string> {
+  const mammoth = await import("mammoth");
+  const result = await mammoth.extractRawText({ buffer });
+  return normalizeText(result.value);
+}
+
 export async function parseImportFile(input: ParseImportInput): Promise<ParseImportOutput> {
   const model = selectImportModel(input.fileType);
   const title = stripFileExt(input.fileName).trim() || "未命名导入";
@@ -127,28 +143,24 @@ export async function parseImportFile(input: ParseImportInput): Promise<ParseImp
   if (isPlainText(input.fileType)) {
     // txt / md：直接读 UTF-8
     contentMarkdown = normalizeText(input.fileBuffer.toString("utf8"));
-  } else if (isDocx(input.fileType)) {
-    // docx：用 mammoth 转 Markdown，避免二进制乱码
-    const result = await mammoth.convertToMarkdown({ buffer: input.fileBuffer });
-    contentMarkdown = normalizeText(result.value);
-  } else if (isDoc(input.fileType)) {
-    // 旧版 .doc 格式 mammoth 也能处理（部分支持），失败则回退到 AI
+  } else if (isDocx(input.fileType) || isDoc(input.fileType)) {
+    // docx / doc：提取纯文本后送 AI 整理为 Markdown
     try {
-      const result = await mammoth.convertToMarkdown({ buffer: input.fileBuffer });
-      contentMarkdown = normalizeText(result.value);
+      const rawText = await parseWordDoc(input.fileBuffer);
+      if (rawText) {
+        contentMarkdown = await callTextModel({ model, text: rawText });
+      }
     } catch {
-      // 回退：把文件内容作为文本送 AI（doc 多为 ANSI/Latin，有限支持）
       contentMarkdown = "";
     }
   } else if (input.fileType === "application/pdf") {
-    // PDF：用 pdf-parse 提取纯文本，再用 AI 整理为 Markdown
-    const pdfData = await pdfParse(input.fileBuffer);
-    const rawText = normalizeText(pdfData.text);
+    // PDF：提取纯文本后送 AI 整理为 Markdown
+    const rawText = await parsePdf(input.fileBuffer);
     if (rawText) {
       contentMarkdown = await callTextModel({ model, text: rawText });
     }
   } else if (input.fileType.startsWith("image/")) {
-    // 图片：直接 base64 送 vision model
+    // 图片：base64 送 vision model
     const base64 = input.fileBuffer.toString("base64");
     contentMarkdown = await callVisionModel({ model, fileType: input.fileType, base64 });
   }
