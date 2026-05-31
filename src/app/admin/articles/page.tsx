@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { Button } from "antd";
 
 import { requireRole } from "@/lib/auth/require-role";
-import { listAdminArticles, publishAdminArticle, unpublishAdminArticle } from "@/services/admin-article.service";
+import { listAdminArticles, publishAdminArticle, unpublishAdminArticle, deleteAdminArticle } from "@/services/admin-article.service";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +38,19 @@ export default async function AdminArticlesPage() {
     if (!actor) redirect("/admin/login");
 
     await unpublishAdminArticle(id, { id: actor.id, role: actor.role });
+    revalidatePath("/admin/articles");
+  }
+
+  async function deleteAction(formData: FormData) {
+    "use server";
+
+    const id = String(formData.get("id") ?? "").trim();
+    if (!id) return;
+
+    const actor = await requireRole(["ADMIN", "PERSONAL"]);
+    if (!actor) redirect("/admin/login");
+
+    await deleteAdminArticle(id, { id: actor.id, role: actor.role });
     revalidatePath("/admin/articles");
   }
 
@@ -158,6 +171,14 @@ export default async function AdminArticlesPage() {
                         下线
                       </Button>
                     </form>
+                    {item.status === "DRAFT" ? (
+                      <form action={deleteAction}>
+                        <input type="hidden" name="id" value={item.id} />
+                        <Button className="btn" htmlType="submit">
+                          删除
+                        </Button>
+                      </form>
+                    ) : null}
                   </div>
                 </div>
               ))}

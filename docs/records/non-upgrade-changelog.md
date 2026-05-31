@@ -61,3 +61,11 @@
 - `src/app/admin/articles/page.tsx`：移除"导入任务"按钮（入口已移至侧边栏）；"审核列表"按钮改为仅 ADMIN 可见
 
 **验证：** `npx tsc --noEmit` 无新增错误，`npx eslint` 无错误
+
+### [bugfix/260531-ui] Task B - PERSONAL 用户可删除草稿文章
+
+**改动内容：**
+- `src/app/admin/articles/page.tsx`：新增 `deleteAction` server action；导入 `deleteAdminArticle`；在草稿文章行显示"删除"按钮
+- `src/components/admin/ArticleEditor.tsx`：编辑页删除按钮显示条件从 `PUBLISHED` 扩展为 `PUBLISHED || DRAFT`；下线按钮保持仅 `PUBLISHED` 状态
+
+**验证：** tsc/ESLint 无新增错误（预存三方库类型缺失不影响）

@@ -504,19 +504,19 @@ export default function ArticleEditor(props: {
             {state.type === "publishing" ? "发布中…" : "发布"}
           </Button>
           {props.mode === "edit" && status === "PUBLISHED" ? (
-            <>
-              <Button
-                data-testid="article-editor-unpublish"
-                className={cx("btn")}
-                onClick={() => void unpublish()}
-                disabled={state.type !== "idle"}
-              >
-                {state.type === "unpublishing" ? "下线中…" : "下线"}
-              </Button>
-              <Button className={cx("btn")} onClick={() => void remove()} disabled={state.type !== "idle"}>
-                {state.type === "deleting" ? "删除中…" : "删除"}
-              </Button>
-            </>
+            <Button
+              data-testid="article-editor-unpublish"
+              className={cx("btn")}
+              onClick={() => void unpublish()}
+              disabled={state.type !== "idle"}
+            >
+              {state.type === "unpublishing" ? "下线中…" : "下线"}
+            </Button>
+          ) : null}
+          {props.mode === "edit" && (status === "PUBLISHED" || status === "DRAFT") ? (
+            <Button className={cx("btn")} onClick={() => void remove()} disabled={state.type !== "idle"}>
+              {state.type === "deleting" ? "删除中…" : "删除"}
+            </Button>
           ) : null}
         </div>
       </div>
