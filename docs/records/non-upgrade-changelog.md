@@ -47,3 +47,4 @@
 - 改善导入页上传区布局为 dropzone 风格（`src/components/admin/ArticleImportPanel.tsx` + `src/app/admin/admin.css`）：空态显示 dashed 虚线框提示；已选文件以列表形式展示文件名和大小（最高 180px 可滚动）；操作按钮集中在底部一行；新增 `.importUploadZone / .importDropHint / .importFileList / .importFileItem / .importUploadActions` 等 CSS 类。commit `f96fb06`。
 - 修复 `/api/admin/articles/imports/process` 401 错误：上传 (`/import`) 与任务列表 (`/imports GET`) 都接受 `["ADMIN", "PERSONAL"]` 权限，但 `process` 端点仅接受 `["ADMIN"]`；PERSONAL 账号上传成功后触发处理时 401。修复：`requireRole(["ADMIN", "PERSONAL"])` 对齐。commit `c3a350d`。
 - `.adminArticlesPanel, .adminImportsPanel, .adminReviewsPanel` 的 `overflow` 由 `hidden` 改为 `auto`，允许内容溢出时显示滚动条。
+- 修复 PDF/DOCX 解析乱码 bug：新增 `mammoth`（DOCX→Markdown）和 `pdf-parse`（PDF→纯文本）依赖，重写 `article-import-parse.service.ts`；DOCX 由 `mammoth.convertToMarkdown` 处理，PDF 先用 `pdf-parse` 提取文本再送 AI 整理，图片类型改用 OpenAI vision multipart image_url 格式；彻底去除原有 `buffer.toString("utf8")` 对二进制格式的误用。
