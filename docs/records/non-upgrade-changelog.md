@@ -76,3 +76,10 @@
 - `src/app/admin/admin.css`：给 `.pane` 补加 `min-width: 0; overflow: hidden`
 
 **根因：** CSS Grid `1fr 1fr` 在子项缺少 `min-width: 0` 时，MDEditor 内部最小宽度会撑开左列超过 50%，导致视觉上不是 1:1
+
+### [bugfix/260531-ui] Task D - PDF 解析 DOMMatrix polyfill
+
+**改动内容：**
+- `src/services/article-import-parse.service.ts`：`parsePdf()` 内调用 pdf-parse 前注入最小化 polyfill，将 `DOMMatrix`/`Path2D` 设为空 class stub
+
+**根因：** `pdfjs-dist`（pdf-parse 依赖）在文字提取时调用 `DOMMatrix`/`Path2D` 等浏览器 Canvas API，Node.js/Serverless 环境不存在这些全局变量，导致解析崩溃
