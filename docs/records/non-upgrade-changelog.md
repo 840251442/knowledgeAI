@@ -44,3 +44,5 @@
 
 - 移除 `.subPanel, .tableWrap, .pane, .aiPanel` 的 `overflow: hidden`，允许内容溢出（`src/app/admin/admin.css`）。
 - 修复 `/api/admin/articles/import` 500 错误：Vercel serverless 环境下 `process.cwd()/.cache/imports` 只读，`mkdir + writeFile` 抛 EACCES。改为将文件内容存入数据库 `fileContent Bytes?` 字段，彻底去除文件系统依赖；新增迁移 `20260531100000_article_import_file_content`（`ALTER TABLE "ArticleImportTask" ADD COLUMN "fileContent" BYTEA`）。验证：`tsc --noEmit` 通过。
+- 改善导入页上传区布局为 dropzone 风格（`src/components/admin/ArticleImportPanel.tsx` + `src/app/admin/admin.css`）：空态显示 dashed 虚线框提示；已选文件以列表形式展示文件名和大小（最高 180px 可滚动）；操作按钮集中在底部一行；新增 `.importUploadZone / .importDropHint / .importFileList / .importFileItem / .importUploadActions` 等 CSS 类。commit `f96fb06`。
+- 修复 `/api/admin/articles/imports/process` 401 错误：上传 (`/import`) 与任务列表 (`/imports GET`) 都接受 `["ADMIN", "PERSONAL"]` 权限，但 `process` 端点仅接受 `["ADMIN"]`；PERSONAL 账号上传成功后触发处理时 401。修复：`requireRole(["ADMIN", "PERSONAL"])` 对齐。commit `c3a350d`。
