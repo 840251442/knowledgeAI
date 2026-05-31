@@ -83,3 +83,10 @@
 - `src/services/article-import-parse.service.ts`：`parsePdf()` 内调用 pdf-parse 前注入最小化 polyfill，将 `DOMMatrix`/`Path2D` 设为空 class stub
 
 **根因：** `pdfjs-dist`（pdf-parse 依赖）在文字提取时调用 `DOMMatrix`/`Path2D` 等浏览器 Canvas API，Node.js/Serverless 环境不存在这些全局变量，导致解析崩溃
+
+## 2026-05-31
+
+- 修复 Vercel 运行时 PDF 解析报错 `a is not a function`：`src/services/article-import-parse.service.ts` 的 `parsePdf()` 从 pdf-parse v1 风格函数调用改为 v2 官方 `PDFParse` 实例 API（`new PDFParse({ data: buffer })` + `getText()` + `destroy()`），避免将不存在的 default 导出当函数调用。
+- 修复原因：项目依赖已升级到 `pdf-parse@2.x`，但代码仍按旧版调用，运行时触发函数调用类型错误。
+- 验证命令与结果：`node -e "import('node:https').then(({get})=>{get('https://bitcoin.org/bitcoin.pdf',res=>{const chunks=[];res.on('data',c=>chunks.push(c));res.on('end',async()=>{const {PDFParse}=await import('pdf-parse'); if(typeof globalThis.DOMMatrix==='undefined'){const stub=class {}; Object.assign(globalThis,{DOMMatrix:stub,Path2D:stub});} const parser=new PDFParse({data:Buffer.concat(chunks)}); const r=await parser.getText({first:1,last:1}); console.log('buffer-parse-ok', typeof r.text, r.text.length>0); await parser.destroy();});});}).catch(e=>{console.error(e); process.exit(1);})"` 输出 `buffer-parse-ok string true`。
+- 关联 commit hash：待提交。
