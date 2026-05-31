@@ -49,3 +49,4 @@
 - `.adminArticlesPanel, .adminImportsPanel, .adminReviewsPanel` 的 `overflow` 由 `hidden` 改为 `auto`，允许内容溢出时显示滚动条。
 - 修复 PDF/DOCX 解析乱码 bug：新增 `mammoth`（DOCX→Markdown）和 `pdf-parse`（PDF→纯文本）依赖，重写 `article-import-parse.service.ts`；DOCX 由 `mammoth.convertToMarkdown` 处理，PDF 先用 `pdf-parse` 提取文本再送 AI 整理，图片类型改用 OpenAI vision multipart image_url 格式；彻底去除原有 `buffer.toString("utf8")` 对二进制格式的误用。
 - 强化 `project-rules.instructions.md`：新增"Agent 执行强制检查清单"章节，要求每次改动结束前必须按序完成：写 changelog → 检查 README → 同批 commit → 回复确认，违反任意一条视为任务未完成。
+- 修复 CI lint 失败：去除 `article-import-parse.service.ts` 中两行无效的 `eslint-disable-next-line @typescript-eslint/no-require-imports` 注释（该规则在 `eslint-config-next` 中不存在，成为多余指令触发警告）。验证：`npx eslint src/services/article-import-parse.service.ts --max-warnings 0` 通过。

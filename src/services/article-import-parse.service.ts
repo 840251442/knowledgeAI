@@ -1,10 +1,8 @@
 import path from "node:path";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const mammoth = require("mammoth") as {
   convertToMarkdown: (input: { buffer: Buffer }) => Promise<{ value: string }>;
 };
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require("pdf-parse") as (buffer: Buffer) => Promise<{ text: string }>;
 
 import OpenAI from "openai";
