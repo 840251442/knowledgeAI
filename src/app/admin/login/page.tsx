@@ -56,8 +56,15 @@ export default function AdminLoginPage() {
 
       const refreshed = await refreshAuthSession();
       if (refreshed && !cancelled) {
-        window.location.replace("/admin/articles");
-        return;
+        try {
+          const hasSession = await probeAdminSession();
+          if (hasSession && !cancelled) {
+            window.location.replace("/admin/articles");
+            return;
+          }
+        } catch {
+          // Network error – fall through to clear session and show login form.
+        }
       }
 
       if (!cancelled) {

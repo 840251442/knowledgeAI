@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 
 import type { ArticleImportTaskStatus } from "@prisma/client";
@@ -22,6 +22,7 @@ type ImportTaskRow = {
   fileType: string;
   fileSize: number;
   storagePath: string;
+  fileContent: Buffer | null;
   status: ArticleImportTaskStatus;
   parseModel: string | null;
   parsedTitle: string | null;
@@ -38,7 +39,6 @@ type ImportTaskRow = {
   updatedAt: Date;
 };
 
-const IMPORT_UPLOAD_DIR = path.join(process.cwd(), ".cache", "imports");
 const MAX_IMPORT_FILES = 5;
 const MAX_IMPORT_FILE_SIZE = 10 * 1024 * 1024;
 const UNSUPPORTED_STORAGE_PATH_PLACEHOLDER_PREFIX = "unsupported://not-stored";
@@ -171,7 +171,6 @@ export async function createImportTasks(input: { files: File[]; actor: ImportAct
   }
 
   const created: ArticleImportTaskItem[] = [];
-  let hasStoredFile = false;
   for (const file of input.files) {
     const fileType = detectFileType(file);
     const safeName = stripUnsafeFileName(file.name);
@@ -224,17 +223,9 @@ export async function createImportTasks(input: { files: File[]; actor: ImportAct
       throw new Error("IMPORT_FILE_SIZE_INVALID");
     }
 
-    if (!hasStoredFile) {
-      await mkdir(IMPORT_UPLOAD_DIR, { recursive: true });
-      hasStoredFile = true;
-    }
-
-    const ext = path.extname(safeName);
-    const storedFileName = `${Date.now()}-${randomUUID()}${ext}`;
-    const storagePath = path.join(IMPORT_UPLOAD_DIR, storedFileName);
-
     const arrayBuffer = await file.arrayBuffer();
-    await writeFile(storagePath, Buffer.from(arrayBuffer));
+    const fileContent = Buffer.from(arrayBuffer);
+    const storagePath = `db:${safeName}`;
 
     const task = (await prisma.articleImportTask.create({
       data: {
@@ -244,6 +235,7 @@ export async function createImportTasks(input: { files: File[]; actor: ImportAct
         fileType,
         fileSize: file.size,
         storagePath,
+        fileContent,
         status: "QUEUED",
       },
       select: {
@@ -413,6 +405,7 @@ async function processTaskById(taskId: string) {
       fileName: true,
       fileType: true,
       storagePath: true,
+      fileContent: true,
       retryCount: true,
       maxRetries: true,
     },
@@ -421,7 +414,9 @@ async function processTaskById(taskId: string) {
   if (!task) return null;
 
   try {
-    const fileBuffer = await readFile(task.storagePath);
+    const fileBuffer = task.fileContent
+      ? Buffer.from(task.fileContent)
+      : await readFile(task.storagePath);
     const parsed = await parseImportFile({
       fileName: task.fileName,
       fileType: task.fileType,
