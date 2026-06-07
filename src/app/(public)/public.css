@@ -354,6 +354,22 @@
   padding: 16px;
 }
 
+.infiniteStatus {
+  margin-top: 12px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--surface-muted);
+}
+
+.infiniteSentinel {
+  width: 100%;
+  height: 1px;
+}
+
 .cardNoPad {
   padding: 0;
 }

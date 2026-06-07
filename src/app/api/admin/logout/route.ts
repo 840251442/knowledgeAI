@@ -7,33 +7,28 @@ export const runtime = "nodejs";
 
 export async function POST() {
   const cookieStore = await cookies();
-  cookieStore.set(getSessionCookieName("ADMIN"), "", {
+  const base = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
+  };
+
+  cookieStore.set(getSessionCookieName("ADMIN"), "", {
+    ...base,
+  });
+  cookieStore.set(getSessionCookieName("PERSONAL"), "", {
+    ...base,
   });
   cookieStore.set(getLegacySessionCookieName(), "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
+    ...base,
   });
   cookieStore.set(getRefreshCookieName("ADMIN"), "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
+    ...base,
   });
   cookieStore.set(getRefreshCookieName("PERSONAL"), "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
+    ...base,
   });
 
   return apiOk({ ok: true });

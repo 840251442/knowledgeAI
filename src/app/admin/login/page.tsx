@@ -42,16 +42,30 @@ export default function AdminLoginPage() {
 
     async function ensureSession() {
       const local = loadAuthSession();
-      if (local && local.accessTokenExpiresAt > Date.now()) {
-        try {
-          const hasSession = await probeAdminSession();
-          if (hasSession && !cancelled) {
-            window.location.replace("/admin/articles");
-            return;
-          }
-        } catch {
-          // Ignore transient network errors and continue with refresh fallback.
+      if (!local) {
+        if (!cancelled) {
+          clearAuthSession();
+          setCheckingSession(false);
         }
+        return;
+      }
+
+      if (local.accessTokenExpiresAt <= Date.now()) {
+        clearAuthSession();
+        if (!cancelled) {
+          setCheckingSession(false);
+        }
+        return;
+      }
+
+      try {
+        const hasSession = await probeAdminSession();
+        if (hasSession && !cancelled) {
+          window.location.replace("/admin/articles");
+          return;
+        }
+      } catch {
+        // Ignore transient network errors and continue with refresh fallback.
       }
 
       const refreshed = await refreshAuthSession();

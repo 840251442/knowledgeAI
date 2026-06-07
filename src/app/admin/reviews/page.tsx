@@ -3,6 +3,7 @@ import { Button } from "antd";
 
 import { requireRole } from "@/lib/auth/require-role";
 import { listAdminReviewQueue } from "@/services/review.service";
+import AdminReviewActions from "@/components/admin/AdminReviewActions";
 
 export const dynamic = "force-dynamic";
 
@@ -76,16 +77,17 @@ export default async function AdminReviewsPage() {
             </div>
           </div>
         ) : (
-          <div className="tableWrap adminReviewsTableWrap">
+          <div className="tableWrap adminReviewsTableWrap" data-testid="admin-review-list">
             <div className="tableHeader adminReviewTableHeader">
               <div>文章</div>
               <div>状态</div>
               <div>作者</div>
               <div>风险原因</div>
               <div>更新时间</div>
+              <div>操作</div>
             </div>
             {data.items.map((item) => (
-              <div className="tableRow adminReviewTableRow" key={item.id}>
+              <div className="tableRow adminReviewTableRow" key={item.id} data-testid="admin-review-row">
                 <div className="cell">
                   <div className="commentArticle">
                     <strong className="commentArticleTitle">{item.title}</strong>
@@ -106,6 +108,9 @@ export default async function AdminReviewsPage() {
                 </div>
                 <div className="cell">
                   <span className="subMuted">{item.updatedAt.slice(0, 19).replace("T", " ")}</span>
+                </div>
+                <div className="cell">
+                  <AdminReviewActions articleId={item.id} />
                 </div>
               </div>
             ))}
