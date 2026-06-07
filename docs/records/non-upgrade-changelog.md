@@ -36,13 +36,13 @@
 
 - 修复公开文章列表仅显示首屏分页的问题：新增 `PublicArticleInfiniteList`，基于 `IntersectionObserver` 触发增量加载，按 `id` 去重并加入 in-flight 并发保护，确保可滚动加载至全部已发布文章。
 - 保持原有后端分页契约与筛选参数行为：继续使用 `/api/articles?page&pageSize&category&tag`，服务端页面仍负责 `page` 参数合法化与越界归一。
-- 补充公开浏览 E2E 用例：`public-browse.spec.ts` 新增 `lazy-loads published articles until all loaded`，通过创建 13 篇同分类文章验证“首屏 12 条 + 滚动后全部可见 + 已加载全部文案”。
 - 修复后台 `/admin/reviews` 审核列表的人工审核入口：新增 `AdminReviewActions`，在待审核项行内补充通过 / 驳回按钮并复用现有审核 API。
 - 在后台审核列表补充稳定 `data-testid`，确保按钮可见性与交互可被 E2E 稳定覆盖。
+- 稳定公开懒加载 E2E：将测试数据准备由“循环调用创建/发布 API”调整为“直接写入已发布文章数据”，规避测试期 `ECONNREFUSED/socket hang up` 抖动；同时保留 180s 超时上限。
 - 修复原因：避免公开站文章浏览存在“仅少量文章可见”的可达性缺陷，并恢复后台待审核内容的人工处理入口。
 - 验证命令与结果：
-  - `npm run test:e2e -- tests/e2e/public-browse.spec.ts --grep "lazy-loads"` -> 失败（环境缺失：`Missing required env: DATABASE_URL`）。
   - `npm run lint` -> 通过。
   - `npm run typecheck` -> 通过。
-  - `npm run test:e2e -- tests/e2e/admin-comments.spec.ts --grep "review"` -> 通过（1 passed）。
-- 关联 commit hash：`de23fed`、`7a0853be15fe03e942ff1c1813af74d35ba8389c`、`5e9a00b`。
+  - `npm run test:e2e -- tests/e2e/admin-comments.spec.ts --grep review` -> 通过（1 passed）。
+  - `npm run test:e2e -- tests/e2e/public-browse.spec.ts --grep lazy-loads --reporter=line` -> 通过（1 passed）。
+- 关联 commit hash：`de23fed`、`7a0853be15fe03e942ff1c1813af74d35ba8389c`、`5e9a00b`、本次提交后补充。
