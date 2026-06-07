@@ -39,4 +39,4 @@
 - 在审核列表补充稳定 `data-testid`：`admin-review-list`、`admin-review-row`、`admin-review-approve`、`admin-review-reject`。
 - 新增 E2E 覆盖审核列表按钮可见性，命令 `npm run test:e2e -- tests/e2e/admin-comments.spec.ts --grep "review"` 通过（1 passed）。
 - 额外验证：`npm run typecheck` 通过，`npm run lint` 通过。
-- 关联 commit hash：待生成。
+- 关联 commit hash：7a0853be15fe03e942ff1c1813af74d35ba8389c。
