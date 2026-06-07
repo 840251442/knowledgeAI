@@ -149,6 +149,15 @@ export async function refreshAuthSession(): Promise<StoredAuthSession | null> {
   }
 
   if (!res.ok || !json || !json.success) {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+      });
+    } catch {
+      // Best effort: local cleanup below is the fallback.
+    }
     clearAuthSession();
     return null;
   }

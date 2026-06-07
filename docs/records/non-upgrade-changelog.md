@@ -46,3 +46,16 @@
   - `npm run test:e2e -- tests/e2e/admin-comments.spec.ts --grep review` -> 通过（1 passed）。
   - `npm run test:e2e -- tests/e2e/public-browse.spec.ts --grep lazy-loads --reporter=line` -> 通过（1 passed）。
 - 关联 commit hash：`de23fed`、`7a0853be15fe03e942ff1c1813af74d35ba8389c`、`5e9a00b`、本次提交后补充。
+
+## 2026-06-07
+
+- 修复“后台返回前台后列表不刷新”：将公开首页 `src/app/(public)/page.tsx` 改为 `force-dynamic`，避免返回前台时复用旧缓存导致已发布文章不可见。
+- 修复“登录态过期死循环”：登录页自动登录策略增加前置保护，无本地会话或本地会话已过期时不再触发 refresh 链路。
+- 增强过期会话清理：`/api/auth/refresh` 在 refresh token 无效/角色不匹配时立即清空 ADMIN/PERSONAL/LEGACY 相关 cookies。
+- 统一注销清理范围：`/api/auth/logout` 与 `/api/admin/logout` 均改为同时清理 ADMIN/PERSONAL session + refresh + legacy，避免跨角色残留状态。
+- 客户端失败兜底：`refreshAuthSession` 在 refresh 失败时额外调用 `/api/auth/logout`，确保服务端 cookie 与本地 localStorage 同步清空。
+- 修复原因：历史实现只清理了部分登录态，过期后可能残留旧 cookie 触发重复自动登录；同时首页存在缓存命中导致后台变更后前台短时不可见。
+- 验证命令与结果：
+  - `npm run lint` -> 通过。
+  - `npm run typecheck` -> 通过。
+- 关联 commit hash：本提交（见 `git log -1 --oneline`）。

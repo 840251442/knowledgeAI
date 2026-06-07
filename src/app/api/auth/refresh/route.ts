@@ -5,12 +5,30 @@ import {
   createAccessToken,
   createRefreshToken,
   getAccessTokenTtlSeconds,
+  getLegacySessionCookieName,
   getRefreshCookieName,
   getRefreshTokenTtlSeconds,
+  getSessionCookieName,
   verifyRefreshToken,
 } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
+
+function clearAuthCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+  const base = {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  };
+
+  cookieStore.set(getSessionCookieName("ADMIN"), "", base);
+  cookieStore.set(getSessionCookieName("PERSONAL"), "", base);
+  cookieStore.set(getLegacySessionCookieName(), "", base);
+  cookieStore.set(getRefreshCookieName("ADMIN"), "", base);
+  cookieStore.set(getRefreshCookieName("PERSONAL"), "", base);
+}
 
 export async function POST() {
   const cookieStore = await cookies();
@@ -27,10 +45,12 @@ export async function POST() {
       : null);
 
   if (!matched?.payload) {
+    clearAuthCookies(cookieStore);
     return apiError("刷新令牌无效或已过期", { status: 401, code: "INVALID_REFRESH_TOKEN" });
   }
 
   if (matched.payload.role !== matched.role) {
+    clearAuthCookies(cookieStore);
     return apiError("刷新令牌角色不匹配", { status: 401, code: "INVALID_REFRESH_TOKEN" });
   }
 

@@ -2,6 +2,8 @@ import { listPublishedArticles } from "@/services/article.service";
 import { listHotTags } from "@/services/tag.service";
 import HomeArticleFilter from "@/components/home/HomeArticleFilter";
 
+export const dynamic = "force-dynamic";
+
 export default async function PublicHomePage() {
   const articlesPromise = listPublishedArticles({ page: 1, pageSize: 60 });
   const hotTagsPromise = listHotTags(12);
