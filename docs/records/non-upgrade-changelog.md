@@ -59,3 +59,13 @@
   - `npm run lint` -> 通过。
   - `npm run typecheck` -> 通过。
 - 关联 commit hash：本提交（见 `git log -1 --oneline`）。
+
+## 2026-06-07
+
+- 按产品预期修正后台“返回公开站”行为：从后台侧边栏返回时，明确进入公开首页（与截图一致的搜索+列表页面）。
+- 实现方式：`src/app/admin/layout.tsx` 中“返回公开站”改为 `Link` + `window.location.assign("/")`，触发硬跳转，避免客户端路由缓存影响返回观感。
+- 修复原因：用户需要从后台一键回到公开首页，而不是停留在后台路由上下文或出现页面状态不一致感。
+- 验证命令与结果：
+  - `npm run lint` -> 通过。
+  - `npm run typecheck` -> 通过。
+- 关联 commit hash：本提交（见 `git log -1 --oneline`）。
