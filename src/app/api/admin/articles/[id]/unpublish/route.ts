@@ -19,6 +19,9 @@ export async function POST(
     const raw = err instanceof Error ? err.message : "";
     if (raw === "ARTICLE_FORBIDDEN") return apiError("无权限", { status: 403, code: "FORBIDDEN" });
     if (raw === "ARTICLE_NOT_FOUND") return apiError("未找到文章", { status: 404, code: "NOT_FOUND" });
+    if (raw === "ARTICLE_ALREADY_DRAFT") {
+      return apiError("文章未发布，无需下线", { status: 409, code: "ALREADY_DRAFT" });
+    }
     if (raw.includes("Environment variable not found: DATABASE_URL")) {
       return apiError("DATABASE_URL 未配置", { status: 500, code: "MISSING_DATABASE_URL" });
     }

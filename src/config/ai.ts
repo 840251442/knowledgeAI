@@ -34,6 +34,9 @@ export const aiConfig = {
   embeddingBaseUrl,
   writerModel: process.env.AI_WRITER_MODEL?.trim() || "qwen-plus",
   reviewModel: process.env.AI_REVIEW_MODEL?.trim() || process.env.AI_WRITER_MODEL?.trim() || "qwen-plus",
+  importTextModel: process.env.AI_IMPORT_TEXT_MODEL?.trim() || process.env.AI_WRITER_MODEL?.trim() || "qwen-plus",
+  importPdfModel: process.env.AI_IMPORT_PDF_MODEL?.trim() || process.env.AI_WRITER_MODEL?.trim() || "qwen-plus",
+  importVisionModel: process.env.AI_IMPORT_VISION_MODEL?.trim() || process.env.AI_WRITER_MODEL?.trim() || "qwen-vl-max",
   writerMaxChars,
   embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small",
 } as const;
@@ -63,6 +66,9 @@ export function requireAiConfig() {
     embeddingBaseUrl: aiConfig.embeddingBaseUrl,
     writerModel: aiConfig.writerModel,
     reviewModel: aiConfig.reviewModel,
+    importTextModel: aiConfig.importTextModel,
+    importPdfModel: aiConfig.importPdfModel,
+    importVisionModel: aiConfig.importVisionModel,
     writerMaxChars: aiConfig.writerMaxChars,
     embeddingModel: aiConfig.embeddingModel,
   };

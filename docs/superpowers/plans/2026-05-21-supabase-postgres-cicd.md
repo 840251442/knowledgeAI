@@ -16,7 +16,7 @@
   - datasource 从 mysql 切换为 postgresql
 - Modify: `.env.example`
   - 将数据库示例改为 PostgreSQL 连接串
-- Modify: `docs/prompts/database.md`
+- Modify: `.github/agents/database-engineer.agent.md`
   - 全局数据库 prompt 改为 PostgreSQL 版本
 - Add/Modify: `.github/workflows/ci.yml`
   - 云端构建 + 全检查门禁
@@ -41,7 +41,7 @@
 ## Task 2: Database Prompt Update
 
 **Files:**
-- Modify: `docs/prompts/database.md`
+- Modify: `.github/agents/database-engineer.agent.md`
 
 - [x] **Step 1: Rewrite prompt from MySQL to PostgreSQL**
 - [x] **Step 2: Preserve Prisma + migration + seed + index requirements**
@@ -81,7 +81,7 @@
 **Files:**
 - `.github/workflows/ci.yml`
 - `.github/workflows/deploy-prod.yml`
-- `docs/prompts/database.md`
+- `.github/agents/database-engineer.agent.md`
 - `docs/designs/2026-05-21-supabase-postgres-cicd-design.md`
 
 - [x] **Step 1: Parse workflow YAML syntax successfully**

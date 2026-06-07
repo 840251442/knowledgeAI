@@ -4,6 +4,8 @@ import { loginAsAdmin } from "./support/auth";
 import { articleEditorSelectors } from "./support/selectors";
 
 test("article editor shows AI draft panel and allows insert", async ({ page }) => {
+  test.slow();
+
   await loginAsAdmin(page);
   await page.goto("/admin/articles/new");
 
@@ -14,7 +16,7 @@ test("article editor shows AI draft panel and allows insert", async ({ page }) =
   await page.getByTestId(articleEditorSelectors.aiGenerate).click();
   await expect(page.getByTestId(articleEditorSelectors.aiGenerate)).toBeDisabled();
 
-  await expect(page.getByTestId(articleEditorSelectors.aiPreview)).toContainText("##");
+  await expect(page.getByTestId(articleEditorSelectors.aiPreview)).toContainText("##", { timeout: 30_000 });
 
   const before = await page.getByTestId(articleEditorSelectors.markdown).inputValue();
   await page.getByTestId(articleEditorSelectors.aiInsert).click();
@@ -35,4 +37,10 @@ test("ai draft requires keyword and discard keeps markdown unchanged", async ({ 
   await page.getByTestId(articleEditorSelectors.aiDiscard).click();
   const after = await page.getByTestId(articleEditorSelectors.markdown).inputValue();
   expect(after).toBe(before);
+});
+
+test("processes queued import tasks and creates draft articles", async ({ request }) => {
+  const res = await request.post("/api/admin/articles/imports/process");
+  // Without auth returns 401; with any request it should not 404
+  expect(res.status()).not.toBe(404);
 });

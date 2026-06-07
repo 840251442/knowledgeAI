@@ -101,7 +101,7 @@ export default function HomeArticleFilter(props: {
         ) : (
           <div className="list listNoTopMargin" data-testid="home-latest-list">
             {filtered.map((article) => (
-              <div key={article.id} className="result" data-testid="home-latest-item">
+              <Link key={article.id} className="result resultLink" data-testid="home-latest-item" href={`/articles/${article.slug}`}>
                 <div>
                   <strong>{article.title}</strong>
                   <div className="resultExcerpt">{article.summary ?? "（无摘要）"}</div>
@@ -109,10 +109,7 @@ export default function HomeArticleFilter(props: {
                     {article.category.name} · 更新于 {article.updatedAt.slice(0, 10)}
                   </div>
                 </div>
-                <Link className="score" href={`/articles/${article.slug}`}>
-                  OPEN
-                </Link>
-              </div>
+              </Link>
             ))}
           </div>
         )}

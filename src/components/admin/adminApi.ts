@@ -14,7 +14,7 @@ function shouldSkipRefresh(input: RequestInfo | URL) {
 
 export async function authFetch(input: RequestInfo | URL, init?: RequestInit, retry = true): Promise<Response> {
   const headers = new Headers(init?.headers);
-  if (init?.body && !headers.has("content-type")) {
+  if (init?.body && !(init.body instanceof FormData) && !headers.has("content-type")) {
     headers.set("content-type", "application/json");
   }
 
@@ -33,7 +33,7 @@ export async function authFetch(input: RequestInfo | URL, init?: RequestInit, re
     const refreshed = await refreshAuthSession();
     if (refreshed?.accessToken) {
       const retryHeaders = new Headers(init?.headers);
-      if (init?.body && !retryHeaders.has("content-type")) {
+      if (init?.body && !(init.body instanceof FormData) && !retryHeaders.has("content-type")) {
         retryHeaders.set("content-type", "application/json");
       }
       retryHeaders.set("authorization", `Bearer ${refreshed.accessToken}`);

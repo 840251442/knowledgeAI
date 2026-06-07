@@ -1,0 +1,32 @@
+# 工作流顺序约束进度
+
+## 目标
+强制多 Agent 工作流严格按 1 -> 7 顺序执行，禁止跳步、并行或重排；并强制分支安全策略：目标分支基于当前分支创建，且目标分支不得等于当前分支；子 Agent 改动验收通过后仅推送到远端，不自动合并到当前分支。
+
+## 当前阶段
+文档约束修正与验证完成。
+
+## 已完成项
+- 明确问题来源：`brainstorming` 和 `writing-plans` 技能存在，之前的问题是执行时未强制按阶段门禁推进。
+- 已更新 `knowledge-orchestrator`，加入阶段门禁规则，明确必须按 1 -> 7 顺序执行。
+- 已更新 `run-multi-agent-workflow` 入口 prompt，补充顺序执行要求。
+- 已创建对应计划文档。
+- 已新增分支安全门禁：
+  - 目标分支必须从当前分支创建。
+  - 目标分支禁止与当前分支同名。
+  - 子 Agent 改动必须先合并到目标分支。
+  - 验收通过后仅推送子 Agent 分支与目标分支到远端，不自动合并到当前分支。
+
+## 进行中
+- 收口说明整理中。
+
+## 阻塞项
+- 暂无。
+
+## 下一步
+- 如后续需要，继续将同样的阶段门禁与分支门禁补到其它工作流入口。
+
+## 验证证据
+- `read_file`：确认 `.github/agents/knowledge-orchestrator.agent.md` 已包含新分支门禁条款（目标分支来源、同名阻断、验收后仅推送远端）。
+- `read_file`：确认 `.github/prompts/run-multi-agent-workflow.prompt.md` 已包含分支策略硬门禁章节。
+- `read_file`：确认 `docs/superpowers/plans/2026-05-23-workflow-ordering.md` 已新增 publish choreography 描述并打勾完成。

@@ -9,7 +9,7 @@ const PERSONAL_COOKIE_NAME = "ka_personal_session";
 const ADMIN_REFRESH_COOKIE_NAME = "ka_admin_refresh_token";
 const PERSONAL_REFRESH_COOKIE_NAME = "ka_personal_refresh_token";
 
-const ACCESS_TOKEN_TTL_SECONDS = Number(process.env.AUTH_ACCESS_TOKEN_TTL_SECONDS ?? "900");
+const ACCESS_TOKEN_TTL_SECONDS = Number(process.env.AUTH_ACCESS_TOKEN_TTL_SECONDS ?? "2592000");
 const REFRESH_TOKEN_TTL_SECONDS = Number(process.env.AUTH_REFRESH_TOKEN_TTL_SECONDS ?? `${30 * 24 * 60 * 60}`);
 
 type SessionPayload = {

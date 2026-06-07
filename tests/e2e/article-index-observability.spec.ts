@@ -24,6 +24,12 @@ type IndexStatusPayload = {
   lastSuccessAt: string | null;
 };
 
+function extractSessionCookie(setCookieHeader: string | null, cookieName: string) {
+  if (!setCookieHeader) return null;
+  const match = setCookieHeader.match(new RegExp(`${cookieName}=([^;]+)`));
+  return match?.[1] ?? null;
+}
+
 async function getBackendCategoryId(request: APIRequestContext) {
   const res = await request.get("/api/categories");
   expect(res.ok()).toBeTruthy();
@@ -105,27 +111,23 @@ async function waitUntilIndex(
   throw new Error(`index polling timeout, latest=${JSON.stringify(latest)}`);
 }
 
-async function registerPersonal(page: Page, email: string, password: string) {
-  await page.goto("/");
-  const result = await page.evaluate(async (payload) => {
-    const response = await fetch(new URL("/api/auth/register", window.location.origin).toString(), {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...payload, role: "PERSONAL" }),
-    });
+async function registerPersonalForApi(request: APIRequestContext, email: string, password: string) {
+  const response = await request.post("/api/auth/register", {
+    data: { email, password, role: "PERSONAL" },
+  });
+  expect(response.ok()).toBeTruthy();
 
-    return {
-      ok: response.ok,
-      status: response.status,
-      json: (await response.json()) as { success: boolean },
-    };
-  }, { email, password });
+  const json = (await response.json()) as { success: boolean };
+  expect(json.success).toBeTruthy();
 
-  expect(result.ok).toBeTruthy();
-  expect(result.json.success).toBeTruthy();
+  const cookie = extractSessionCookie(response.headers()["set-cookie"] ?? null, "ka_personal_session");
+  expect(cookie).toBeTruthy();
+  return cookie ?? "";
 }
 
-test("index status/reindex api should enforce 401 404 403", async ({ browser, page, request }) => {
+test("index status/reindex api should enforce 401 404 403", async ({ page, request }) => {
+  test.slow();
+
   const anonymousStatus = await request.get(`/api/admin/articles/not-exists-${Date.now()}/index-status`);
   expect(anonymousStatus.status()).toBe(401);
 
@@ -141,17 +143,21 @@ test("index status/reindex api should enforce 401 404 403", async ({ browser, pa
   const notFoundReindex = await page.request.post(`/api/admin/articles/not-exists-${Date.now()}/reindex`);
   expect(notFoundReindex.status()).toBe(404);
 
-  const personalContext = await browser.newContext({ baseURL: "http://127.0.0.1:3000" });
-  const personalPage = await personalContext.newPage();
-  await registerPersonal(personalPage, `index-forbidden-${Date.now()}@knowledgeai.dev`, "Writer#123456");
+  const personalCookie = await registerPersonalForApi(
+    request,
+    `index-forbidden-${Date.now()}@knowledgeai.dev`,
+    "Writer#123456",
+  );
 
-  const forbiddenStatus = await personalPage.request.get(`/api/admin/articles/${articleId}/index-status`);
+  const forbiddenStatus = await request.get(`/api/admin/articles/${articleId}/index-status`, {
+    headers: { cookie: `ka_personal_session=${personalCookie}` },
+  });
   expect(forbiddenStatus.status()).toBe(403);
 
-  const forbiddenReindex = await personalPage.request.post(`/api/admin/articles/${articleId}/reindex`);
+  const forbiddenReindex = await request.post(`/api/admin/articles/${articleId}/reindex`, {
+    headers: { cookie: `ka_personal_session=${personalCookie}` },
+  });
   expect(forbiddenReindex.status()).toBe(403);
-
-  await personalContext.close();
 });
 
 test("publish/update/manual should produce corresponding index tasks", async ({ page }) => {
@@ -220,4 +226,33 @@ test("publish/update/manual should produce corresponding index tasks", async ({ 
     articleId,
     (status) => status.latestTask?.taskType === "MANUAL" && status.latestTask.status === "SUCCESS" && status.state === "success",
   );
+});
+
+test("import api rejects unsupported file type with UNSUPPORTED_FILE_TYPE error code", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(async () => {
+    const response = await fetch(new URL("/api/admin/login", window.location.origin).toString(), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: "admin@knowledgeai.dev", password: "dev" }),
+    });
+    return response.ok;
+  });
+
+  const result = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append("files", new File(["binary"], "virus.exe", { type: "application/x-msdownload" }));
+
+    const response = await fetch(new URL("/api/admin/articles/import", window.location.origin).toString(), {
+      method: "POST",
+      body: form,
+    });
+    return { status: response.status, body: await response.json() };
+  });
+
+  // Unsupported file is queued as FAILED task (UNSUPPORTED_FILE_TYPE), not a hard 400
+  const json = result.body as { success: boolean; data?: { items?: Array<{ errorCode: string | null }> } };
+  expect(json.success).toBeTruthy();
+  const task = json.data?.items?.[0];
+  expect(task?.errorCode).toBe("UNSUPPORTED_FILE_TYPE");
 });

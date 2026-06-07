@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -18,6 +19,16 @@ enum ArticleStatus {
   PUBLISHED
   REJECTED
   ARCHIVED
+}
+
+enum ArticleCommentStatus {
+  OPEN
+  CLOSED
+}
+
+enum CommentAuthorType {
+  GUEST
+  PERSONAL
 }
 
 enum ReviewType {
@@ -50,6 +61,14 @@ enum EmbeddingTaskStatus {
   FAILED
 }
 
+enum ArticleImportTaskStatus {
+  QUEUED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  RETRYING
+}
+
 enum SearchQueryType {
   KEYWORD
   SEMANTIC
@@ -77,6 +96,7 @@ model PersonalUser {
   isActive     Boolean   @default(true)
   articles     Article[] @relation("PersonalArticleAuthor")
   reviews      ArticleReview[]
+  comments     Comment[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -110,6 +130,7 @@ model Article {
   contentMarkdown String        @db.Text
   coverImage      String?       @db.VarChar(500)
   status          ArticleStatus @default(DRAFT)
+  commentStatus   ArticleCommentStatus @default(OPEN)
   isFeatured      Boolean       @default(false)
   publishedAt     DateTime?
   categoryId      String
@@ -121,7 +142,9 @@ model Article {
   tags            ArticleTag[]
   chunks          ArticleChunk[]
   embeddingTasks  EmbeddingTask[]
+  importTasks     ArticleImportTask[]
   reviews         ArticleReview[]
+  comments        Comment[]
   topSearchLogs   SearchLog[]      @relation("SearchLogTopArticle")
   views           ArticleView[]
   createdAt       DateTime      @default(now())
@@ -149,6 +172,22 @@ model ArticleReview {
 
   @@index([articleId, createdAt])
   @@index([decision, createdAt])
+}
+
+model Comment {
+  id             String           @id @default(cuid())
+  articleId      String
+  authorType     CommentAuthorType
+  personalUserId String?
+  guestName      String?          @db.VarChar(80)
+  body           String           @db.Text
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  article        Article          @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  personalUser   PersonalUser?    @relation(fields: [personalUserId], references: [id], onDelete: SetNull)
+
+  @@index([articleId, createdAt])
+  @@index([personalUserId, createdAt])
 }
 
 model PhoneOtpCode {
@@ -209,6 +248,36 @@ model EmbeddingTask {
 
   @@index([articleId, status])
   @@index([createdAt])
+}
+
+model ArticleImportTask {
+  id            String                  @id @default(cuid())
+  uploaderRole  UserRole
+  uploaderId    String
+  fileName      String                  @db.VarChar(255)
+  fileType      String                  @db.VarChar(100)
+  fileSize      Int
+  storagePath   String                  @db.VarChar(500)
+  fileContent   Bytes?
+  status        ArticleImportTaskStatus @default(QUEUED)
+  parseModel    String?                 @db.VarChar(100)
+  parsedTitle   String?                 @db.VarChar(200)
+  parsedSummary String?                 @db.VarChar(500)
+  parsedContent String?                 @db.Text
+  articleId     String?
+  errorCode     String?                 @db.VarChar(100)
+  errorMessage  String?                 @db.VarChar(500)
+  retryCount    Int                     @default(0)
+  maxRetries    Int                     @default(3)
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  article       Article?                @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  @@index([uploaderRole, uploaderId, createdAt])
+  @@index([status, updatedAt])
+  @@index([articleId])
 }
 
 model SearchLog {

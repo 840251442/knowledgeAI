@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Input } from "antd";
 import Image from "next/image";
-import { loadAuthSession, refreshAuthSession, saveAuthSession } from "@/lib/auth/client-session";
+import { clearAuthSession, loadAuthSession, refreshAuthSession, saveAuthSession } from "@/lib/auth/client-session";
 
 type LoginState =
   | { type: "idle" }
@@ -19,6 +19,15 @@ type LoginSuccessPayload = {
   accessTokenExpiresIn: number;
 };
 
+async function probeAdminSession() {
+  const res = await fetch("/api/admin/articles?page=1&pageSize=1", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+  return res.ok;
+}
+
 export default function AdminLoginPage() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -33,20 +42,47 @@ export default function AdminLoginPage() {
 
     async function ensureSession() {
       const local = loadAuthSession();
-      if (local && local.accessTokenExpiresAt > Date.now()) {
+      if (!local) {
         if (!cancelled) {
-          window.location.replace("/admin/articles");
+          clearAuthSession();
+          setCheckingSession(false);
         }
         return;
       }
 
-      const refreshed = await refreshAuthSession();
-      if (refreshed && !cancelled) {
-        window.location.replace("/admin/articles");
+      if (local.accessTokenExpiresAt <= Date.now()) {
+        clearAuthSession();
+        if (!cancelled) {
+          setCheckingSession(false);
+        }
         return;
       }
 
+      try {
+        const hasSession = await probeAdminSession();
+        if (hasSession && !cancelled) {
+          window.location.replace("/admin/articles");
+          return;
+        }
+      } catch {
+        // Ignore transient network errors and continue with refresh fallback.
+      }
+
+      const refreshed = await refreshAuthSession();
+      if (refreshed && !cancelled) {
+        try {
+          const hasSession = await probeAdminSession();
+          if (hasSession && !cancelled) {
+            window.location.replace("/admin/articles");
+            return;
+          }
+        } catch {
+          // Network error – fall through to clear session and show login form.
+        }
+      }
+
       if (!cancelled) {
+        clearAuthSession();
         setCheckingSession(false);
       }
     }
