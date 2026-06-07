@@ -258,6 +258,7 @@ model ArticleImportTask {
   fileType      String                  @db.VarChar(100)
   fileSize      Int
   storagePath   String                  @db.VarChar(500)
+  fileContent   Bytes?
   status        ArticleImportTaskStatus @default(QUEUED)
   parseModel    String?                 @db.VarChar(100)
   parsedTitle   String?                 @db.VarChar(200)

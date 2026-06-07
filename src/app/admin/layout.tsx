@@ -81,7 +81,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href="/admin/articles"
                 label="文章管理"
                 pill="文章"
-                active={pathname.startsWith("/admin/articles")}
+                active={pathname.startsWith("/admin/articles") && !pathname.startsWith("/admin/articles/imports")}
+              />
+              <NavLink
+                href="/admin/articles/imports"
+                label="导入管理"
+                pill="导入"
+                active={pathname.startsWith("/admin/articles/imports")}
               />
               {isAdmin ? (
                 <NavLink

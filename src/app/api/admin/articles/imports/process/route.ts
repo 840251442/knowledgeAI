@@ -6,7 +6,7 @@ import { processImportTasksBatch } from "@/services/article-import.service";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const user = await requireRole(["ADMIN"]);
+  const user = await requireRole(["ADMIN", "PERSONAL"]);
   if (!user) return apiError("未登录", { status: 401, code: "UNAUTHORIZED" });
 
   const url = new URL(request.url);

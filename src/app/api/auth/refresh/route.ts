@@ -4,6 +4,7 @@ import { apiError, apiOk } from "@/lib/api/response";
 import {
   createAccessToken,
   createRefreshToken,
+  createSessionToken,
   getAccessTokenTtlSeconds,
   getLegacySessionCookieName,
   getRefreshCookieName,
@@ -62,8 +63,13 @@ export async function POST() {
     userId: matched.payload.userId,
     role: matched.payload.role,
   });
+  const sessionToken = createSessionToken({
+    userId: matched.payload.userId,
+    role: matched.payload.role,
+    issuedAt: Date.now(),
+  });
 
-  if (!accessToken || !nextRefreshToken) {
+  if (!accessToken || !nextRefreshToken || !sessionToken) {
     return apiError("AUTH_SECRET 未配置", { status: 500, code: "MISSING_AUTH_SECRET" });
   }
 
@@ -73,6 +79,16 @@ export async function POST() {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: getRefreshTokenTtlSeconds(),
+  });
+
+  // Renew the session cookie so server-rendered admin pages remain accessible
+  // after a token refresh (prevents redirect loops when the session cookie has
+  // expired but the refresh token is still valid).
+  cookieStore.set(getSessionCookieName(matched.payload.role), sessionToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
   });
 
   return apiOk({
