@@ -126,3 +126,28 @@ test("rejects when upload count is greater than five", async ({ page }) => {
   expect(json.success).toBeFalsy();
   expect(json.error?.code).toBe("IMPORT_FILE_COUNT_INVALID");
 });
+
+test("review list shows approve and reject actions", async ({ page }) => {
+  await loginAsAdmin(page, "/admin/reviews");
+
+  await expect(page.getByTestId("admin-reviews-panel")).toBeVisible();
+
+  const list = page.getByTestId("admin-review-list");
+  if ((await list.count()) === 0) {
+    await expect(page.getByText("当前没有待审核内容")).toBeVisible();
+    return;
+  }
+
+  await expect(list).toBeVisible();
+
+  const rows = page.getByTestId("admin-review-row");
+  const total = await rows.count();
+  if (total === 0) {
+    await expect(page.getByText("当前没有待审核内容")).toBeVisible();
+    return;
+  }
+
+  const firstRow = rows.first();
+  await expect(firstRow.getByTestId("admin-review-approve")).toBeVisible();
+  await expect(firstRow.getByTestId("admin-review-reject")).toBeVisible();
+});

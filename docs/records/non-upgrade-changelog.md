@@ -31,3 +31,12 @@
 - 修复 `authFetch` multipart 上传 bug：`body` 为 `FormData` 时不再强制注入 `content-type: application/json`，让浏览器自动生成含 `boundary` 的 multipart 头；否则服务端 `request.formData()` 解析失败并报"请求体必须是 multipart/form-data"。验证：`npm run typecheck && npm run lint` 通过（commit `576bdec`）。
 - 新增 TDD 锚点测试（5 条，分散在现有 spec 文件末尾）：`UNSUPPORTED_FILE_TYPE` 错误码校验、超 5 文件上传 400 拒绝、personal 用户任务隔离、重复发布 409 `ALREADY_PUBLISHED`、process endpoint 路由存在性 smoke test。
 - 新增 `scripts/probe-import-pipeline.ts`：本地验收探针，使用 Node 22 原生 `fetch` + `FormData`，无额外依赖；`package.json` 同步增加 `probe:import` 脚本。
+
+## 2026-06-07
+
+- 为 `/admin/reviews` 审核列表补充行内人工审核按钮：新增通过 / 驳回操作，直接调用现有 `POST /api/admin/reviews/:articleId/approve` 与 `POST /api/admin/reviews/:articleId/reject`。
+- 新增 `src/components/admin/AdminReviewActions.tsx`，提供按钮 loading、错误提示与成功后刷新，且仅在后台审核页由管理员上下文渲染。
+- 在审核列表补充稳定 `data-testid`：`admin-review-list`、`admin-review-row`、`admin-review-approve`、`admin-review-reject`。
+- 新增 E2E 覆盖审核列表按钮可见性，命令 `npm run test:e2e -- tests/e2e/admin-comments.spec.ts --grep "review"` 通过（1 passed）。
+- 额外验证：`npm run typecheck` 通过，`npm run lint` 通过。
+- 关联 commit hash：待生成。
