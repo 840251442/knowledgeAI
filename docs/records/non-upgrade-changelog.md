@@ -31,3 +31,15 @@
 - 修复 `authFetch` multipart 上传 bug：`body` 为 `FormData` 时不再强制注入 `content-type: application/json`，让浏览器自动生成含 `boundary` 的 multipart 头；否则服务端 `request.formData()` 解析失败并报"请求体必须是 multipart/form-data"。验证：`npm run typecheck && npm run lint` 通过（commit `576bdec`）。
 - 新增 TDD 锚点测试（5 条，分散在现有 spec 文件末尾）：`UNSUPPORTED_FILE_TYPE` 错误码校验、超 5 文件上传 400 拒绝、personal 用户任务隔离、重复发布 409 `ALREADY_PUBLISHED`、process endpoint 路由存在性 smoke test。
 - 新增 `scripts/probe-import-pipeline.ts`：本地验收探针，使用 Node 22 原生 `fetch` + `FormData`，无额外依赖；`package.json` 同步增加 `probe:import` 脚本。
+
+## 2026-06-07
+
+- 修复公开文章列表仅显示首屏分页的问题：新增 `PublicArticleInfiniteList`，基于 `IntersectionObserver` 触发增量加载，按 `id` 去重并加入 in-flight 并发保护，确保可滚动加载至全部已发布文章。
+- 保持原有后端分页契约与筛选参数行为：继续使用 `/api/articles?page&pageSize&category&tag`，服务端页面仍负责 `page` 参数合法化与越界归一。
+- 补充公开浏览 E2E 用例：`public-browse.spec.ts` 新增 `lazy-loads published articles until all loaded`，通过创建 13 篇同分类文章验证“首屏 12 条 + 滚动后全部可见 + 已加载全部文案”。
+- 修复原因：避免公开站文章浏览存在“仅少量文章可见”的可达性缺陷，保证已发布内容完整触达。
+- 验证命令与结果：
+  - `npm run test:e2e -- tests/e2e/public-browse.spec.ts --grep "lazy-loads"` -> 失败（环境缺失：`Missing required env: DATABASE_URL`）。
+  - `npm run lint` -> 通过。
+  - `npm run typecheck` -> 通过。
+- 关联 commit hash：本次提交生成后以提交记录为准。
