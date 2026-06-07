@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "antd";
 
+import PublicArticleInfiniteList from "@/components/home/PublicArticleInfiniteList";
 import { listPublishedArticles } from "@/services/article.service";
 
 const PAGE_SIZE = 12;
@@ -68,24 +68,14 @@ export default async function PublicArticlesPage({
             <div className="score">DB</div>
           </div>
         ) : (
-          <div className="list listNoTopMargin">
-            {result.items.map((a) => (
-              <div key={a.id} className="result">
-                <div>
-                  <strong>{a.title}</strong>
-                  <div className="resultExcerpt">
-                    {a.summary ?? "（无摘要）"}
-                  </div>
-                  <div className="resultMeta">
-                    {a.category.name} · 更新于 {a.updatedAt.slice(0, 10)}
-                  </div>
-                </div>
-                <Link className="score" href={`/articles/${a.slug}`}>
-                  OPEN
-                </Link>
-              </div>
-            ))}
-          </div>
+          <PublicArticleInfiniteList
+            initialItems={result.items}
+            initialTotal={result.total}
+            initialPage={page}
+            pageSize={PAGE_SIZE}
+            category={categorySlug}
+            tag={tagSlug}
+          />
         )}
       </div>
     </main>
